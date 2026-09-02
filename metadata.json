@@ -1,0 +1,7 @@
+{
+  "name": "Reseller Simulator",
+  "description": "Minimalist business simulation game of goods reselling, market analysis, and inventory scaling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
