@@ -4,13 +4,16 @@ import {
   RotateCcw, 
   Download, 
   Upload, 
-  Keyboard, 
-  Sliders, 
   Check, 
   AlertTriangle,
-  FileText
+  Sun,
+  Moon,
+  Smartphone,
+  PieChart,
+  Zap,
+  History
 } from 'lucide-react';
-import { useGame } from '../../context/GameContext';
+import { useGame, STORAGE_KEY, LEGACY_STORAGE_KEY } from '../../context/GameContext';
 
 export const SettingsView: React.FC = () => {
   const { 
@@ -18,7 +21,12 @@ export const SettingsView: React.FC = () => {
     setGameSpeed, 
     isAutoPlay, 
     setIsAutoPlay, 
-    resetGame 
+    resetGame,
+    theme,
+    toggleTheme,
+    deviceFrame,
+    setDeviceFrame,
+    setCurrentTab
   } = useGame();
 
   const [confirmReset, setConfirmReset] = useState(false);
@@ -28,7 +36,7 @@ export const SettingsView: React.FC = () => {
 
   const handleExportSave = () => {
     try {
-      const data = localStorage.getItem('reseller_simulator_save_v1');
+      const data = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (data) {
         navigator.clipboard.writeText(data);
         setCopySuccess(true);
@@ -43,7 +51,8 @@ export const SettingsView: React.FC = () => {
     try {
       if (!importText.trim()) return;
       JSON.parse(importText);
-      localStorage.setItem('reseller_simulator_save_v1', importText);
+      localStorage.setItem(STORAGE_KEY, importText);
+      localStorage.setItem(LEGACY_STORAGE_KEY, importText);
       setImportStatus('success');
       setTimeout(() => {
         window.location.reload();
@@ -54,163 +63,143 @@ export const SettingsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Simulation Controls */}
-      <div className="p-6 rounded-xl bg-white border border-zinc-200/90 shadow-2xs">
-        <div className="flex items-center gap-2 mb-1">
-          <Sliders className="w-4 h-4 text-zinc-900" />
-          <h2 className="text-sm font-bold text-zinc-900">Параметры симуляции</h2>
-        </div>
-        <p className="text-xs text-zinc-500 mb-4">Настройка скорости течения рыночных дней и авто-хода</p>
+    <div className="space-y-4 max-w-full pb-8 select-none">
+      {/* Sub-navigation Switcher */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-[#131C31] rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs">
+        <button
+          onClick={() => setCurrentTab('finances')}
+          className="flex-1 py-2 px-2 rounded-xl font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1"
+        >
+          <PieChart className="w-3.5 h-3.5" />
+          <span>P&L</span>
+        </button>
 
-        <div className="space-y-4 text-xs">
-          <div className="flex items-center justify-between py-2 border-b border-zinc-100">
-            <div>
-              <div className="font-semibold text-zinc-900">Скорость авто-хода</div>
-              <div className="text-[11px] text-zinc-500">Интервал автоматической смены дней</div>
+        <button
+          onClick={() => setCurrentTab('upgrades')}
+          className="flex-1 py-2 px-2 rounded-xl font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1"
+        >
+          <Zap className="w-3.5 h-3.5" />
+          <span>Навыки</span>
+        </button>
+
+        <button
+          onClick={() => setCurrentTab('sales')}
+          className="flex-1 py-2 px-2 rounded-xl font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1"
+        >
+          <History className="w-3.5 h-3.5" />
+          <span>Сделки</span>
+        </button>
+
+        <button
+          className="flex-1 py-2 px-2 rounded-xl font-bold bg-white dark:bg-[#18233C] text-blue-600 dark:text-blue-400 shadow-xs transition-all flex items-center justify-center gap-1"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          <span>Опции</span>
+        </button>
+      </div>
+
+      {/* Visual & Experience Settings */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#131C31] border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+        <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Внешний вид приложения
+        </h3>
+
+        <div className="space-y-2">
+          {/* Theme Toggle */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#18233C] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900 dark:text-white">Тема оформления</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {theme === 'dark' ? 'Премиум ночной режим (Navy)' : 'Светлый чистый интерфейс'}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              {[1, 2, 3].map(speed => (
-                <button
-                  key={speed}
-                  onClick={() => setGameSpeed(speed)}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-medium transition-all ${
-                    gameSpeed === speed 
-                      ? 'bg-zinc-900 text-white border-zinc-900' 
-                      : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
-                  }`}
-                >
-                  {speed}x {speed === 1 ? '(3с)' : speed === 2 ? '(1.8с)' : '(0.9с)'}
-                </button>
-              ))}
-            </div>
+
+            <button
+              onClick={toggleTheme}
+              className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-xs"
+            >
+              {theme === 'dark' ? 'Тёмная' : 'Светлая'}
+            </button>
           </div>
 
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <div className="font-semibold text-zinc-900">Фоновый авто-ход</div>
-              <div className="text-[11px] text-zinc-500">Автоматическое продвижение дней без клика</div>
+          {/* Device Frame Toggle (Desktop) */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#18233C] border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 flex items-center justify-center">
+                <Smartphone className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-slate-900 dark:text-white">Мобильный корпус</div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Эмуляция смартфона флагмана на широких экранах
+                </div>
+              </div>
             </div>
+
             <button
-              onClick={() => setIsAutoPlay(!isAutoPlay)}
-              className={`px-3.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-                isAutoPlay 
-                  ? 'bg-amber-50 text-amber-700 border-amber-300' 
-                  : 'bg-zinc-100 text-zinc-700 border-zinc-200 hover:bg-zinc-200'
+              onClick={() => setDeviceFrame(!deviceFrame)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                deviceFrame 
+                  ? 'bg-blue-600 text-white shadow-xs' 
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
               }`}
             >
-              {isAutoPlay ? 'Активен (Пауза)' : 'Приостановлен'}
+              {deviceFrame ? 'Включен' : 'Отключен'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Keyboard Shortcuts Reference */}
-      <div className="p-6 rounded-xl bg-white border border-zinc-200/90 shadow-2xs">
-        <div className="flex items-center gap-2 mb-1">
-          <Keyboard className="w-4 h-4 text-zinc-900" />
-          <h2 className="text-sm font-bold text-zinc-900">Горячие клавиши</h2>
-        </div>
-        <p className="text-xs text-zinc-500 mb-4">Быстрая навигация без отрыва от клавиатуры</p>
+      {/* Backup and Data Management */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#131C31] border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+        <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          Сохранения и данные
+        </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-50 border border-zinc-200/60">
-            <span className="text-zinc-600">Следующий день / Пауза:</span>
-            <kbd className="px-2 py-1 rounded bg-white border border-zinc-300 font-mono text-[11px] font-semibold text-zinc-800 shadow-2xs">
-              Пробел (Space)
-            </kbd>
-          </div>
-          <div className="flex items-center justify-between p-2.5 rounded-lg bg-zinc-50 border border-zinc-200/60">
-            <span className="text-zinc-600">Переключение вкладок:</span>
-            <div className="flex gap-1">
-              <kbd className="px-1.5 py-1 rounded bg-white border border-zinc-300 font-mono text-[11px] font-semibold text-zinc-800 shadow-2xs">1</kbd>
-              <span className="text-zinc-400">..</span>
-              <kbd className="px-1.5 py-1 rounded bg-white border border-zinc-300 font-mono text-[11px] font-semibold text-zinc-800 shadow-2xs">7</kbd>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Backup & Save State Management */}
-      <div className="p-6 rounded-xl bg-white border border-zinc-200/90 shadow-2xs">
-        <div className="flex items-center gap-2 mb-1">
-          <Download className="w-4 h-4 text-zinc-900" />
-          <h2 className="text-sm font-bold text-zinc-900">Сохранение прогресса</h2>
-        </div>
-        <p className="text-xs text-zinc-500 mb-4">Игра автоматически сохраняет все данные в локальное хранилище браузера</p>
-
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={handleExportSave}
-            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-zinc-200 hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition-colors"
+            className="h-11 px-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer touch-manipulation"
           >
-            {copySuccess ? <Check className="w-4 h-4 text-emerald-600" /> : <FileText className="w-4 h-4 text-zinc-400" />}
-            <span>{copySuccess ? 'Скопировано в буфер!' : 'Скопировать код сохранения'}</span>
+            {copySuccess ? <Check className="w-4 h-4 text-emerald-500" /> : <Download className="w-4 h-4 text-blue-600" />}
+            <span>{copySuccess ? 'Скопировано!' : 'Экспорт сейва'}</span>
           </button>
-        </div>
 
-        {/* Import JSON */}
-        <div className="mt-4 pt-4 border-t border-zinc-100">
-          <label className="block text-xs font-medium text-zinc-700 mb-1.5">
-            Восстановить прогресс из кода:
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Вставьте JSON сохранения..."
-              value={importText}
-              onChange={e => setImportText(e.target.value)}
-              className="flex-1 px-3 py-1.5 rounded-lg border border-zinc-200 text-xs font-mono bg-zinc-50/50"
-            />
-            <button
-              onClick={handleImportSave}
-              className="px-3.5 py-1.5 rounded-lg bg-zinc-900 text-white text-xs font-semibold hover:bg-zinc-800 transition-colors"
-            >
-              Загрузить
-            </button>
-          </div>
-          {importStatus === 'error' && (
-            <div className="text-[11px] text-rose-600 mt-1.5">Ошибка: некорректный JSON</div>
-          )}
-        </div>
-      </div>
-
-      {/* Danger Zone: Reset Game */}
-      <div className="p-6 rounded-xl bg-white border border-rose-200 shadow-2xs">
-        <div className="flex items-center gap-2 mb-1 text-rose-700">
-          <AlertTriangle className="w-4 h-4" />
-          <h2 className="text-sm font-bold">Сброс бизнес-прогресса</h2>
-        </div>
-        <p className="text-xs text-zinc-500 mb-4">
-          Очистить все транзакции, склад и начать заново со стартовым капиталом 125,000 ₽.
-        </p>
-
-        {confirmReset ? (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                resetGame();
-                setConfirmReset(false);
-              }}
-              className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors shadow-xs"
-            >
-              Да, сбросить все данные
-            </button>
-            <button
-              onClick={() => setConfirmReset(false)}
-              className="px-3 py-2 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 text-xs font-medium transition-colors"
-            >
-              Отмена
-            </button>
-          </div>
-        ) : (
           <button
-            onClick={() => setConfirmReset(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-semibold transition-colors"
+            onClick={() => setConfirmReset(!confirmReset)}
+            className="h-11 px-3 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Сбросить симуляцию</span>
+            <RotateCcw className="w-4 h-4" />
+            <span>Сброс карьеры</span>
           </button>
+        </div>
+
+        {confirmReset && (
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-rose-800 dark:text-rose-200">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>Вы уверены, что хотите начать заново? Прогресс будет очищен.</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={resetGame}
+                className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs"
+              >
+                Да, начать заново
+              </button>
+              <button
+                onClick={() => setConfirmReset(false)}
+                className="flex-1 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

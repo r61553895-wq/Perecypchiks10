@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ShoppingBag, TrendingUp, AlertCircle, Sparkles, Check, Truck, Percent, Info } from 'lucide-react';
+import { X, TrendingUp, AlertCircle, Sparkles, Check, Truck, Percent, Info, MessageSquare, ShoppingCart } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { CATEGORY_LABELS, CONDITION_LABELS, DEMAND_LABELS } from '../../data/catalog';
 import { ProductImage } from '../ProductImage';
@@ -8,7 +8,7 @@ export const ProductDetailModal: React.FC = () => {
   const { 
     selectedMarketItem, 
     setSelectedMarketItem, 
-    startNegotiation,
+    startNegotiation, 
     buyItem, 
     balance, 
     currentCommissionRate,
@@ -21,11 +21,11 @@ export const ProductDetailModal: React.FC = () => {
   const item = selectedMarketItem;
   const fee = Math.round(item.currentMarketPrice * currentCommissionRate);
   const netProfit = item.currentMarketPrice - item.sellerAskingPrice - fee - item.shippingCost;
-  const marginPercent = Math.round((netProfit / item.currentMarketPrice) * 100);
+  const marginPercent = Math.round((netProfit / (item.currentMarketPrice || 1)) * 100);
   const canAfford = balance >= item.sellerAskingPrice;
   const hasSlot = usedWarehouseSlots < maxWarehouseSlots;
 
-  // Generate a realistic 7-day sparkline history around current market price
+  // 7-day sparkline history
   const priceHistory = [
     Math.round(item.currentMarketPrice * 0.94),
     Math.round(item.currentMarketPrice * 0.96),
@@ -41,7 +41,7 @@ export const ProductDetailModal: React.FC = () => {
   const range = maxP - minP || 1;
 
   const sparkWidth = 280;
-  const sparkHeight = 60;
+  const sparkHeight = 50;
   const points = priceHistory.map((val, idx) => {
     const x = (idx / (priceHistory.length - 1)) * sparkWidth;
     const y = sparkHeight - ((val - minP) / range) * sparkHeight;
@@ -55,115 +55,75 @@ export const ProductDetailModal: React.FC = () => {
     }
   };
 
+  const handleNegotiate = () => {
+    const id = item.id;
+    setSelectedMarketItem(null);
+    startNegotiation(id);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-zinc-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs select-none">
       <div 
-        className="w-full max-w-lg rounded-2xl bg-white border border-zinc-200 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-white dark:bg-[#131C31] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-slate-900 dark:text-white"
         onClick={e => e.stopPropagation()}
       >
-        {/* Header with Title & Close */}
-        <div className="px-5 py-4 border-b border-zinc-100 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-400">
-                {CATEGORY_LABELS[item.category]} • {item.brand}
-              </span>
-              <span className={`px-1.5 py-0.2 rounded text-[10px] font-medium border ${CONDITION_LABELS[item.condition].badgeColor}`}>
-                {CONDITION_LABELS[item.condition].label}
-              </span>
-            </div>
-            <h2 className="text-base font-bold text-zinc-900 leading-tight">{item.title}</h2>
-          </div>
-          <button
+        {/* Header */}
+        <div className="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            {CATEGORY_LABELS[item.category] || item.category}
+          </span>
+          <button 
             onClick={() => setSelectedMarketItem(null)}
-            className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+            className="p-1 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="p-5 space-y-4">
-          {/* Top preview row */}
-          <div className="flex gap-4 items-center">
-            <div className="w-24 h-24 rounded-xl bg-zinc-900 border border-zinc-200 overflow-hidden shrink-0">
-              <ProductImage 
-                src={item.image} 
-                alt={item.title} 
-                title={item.title}
-                category={item.category}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-1 text-xs space-y-1.5">
-              <div className="text-zinc-600 italic">
-                «{item.sellerNote}»
-              </div>
-              <div className="flex items-center gap-2 pt-1 text-[11px] text-zinc-500">
-                <span>Спрос на рынке:</span>
-                <span className={`px-1.5 py-0.2 rounded text-[10px] font-medium border ${DEMAND_LABELS[item.demand].badgeColor}`}>
-                  {DEMAND_LABELS[item.demand].label}
-                </span>
-              </div>
-              <div className="text-[11px] text-zinc-400 font-mono">
-                Осталось на площадке: {item.daysRemaining} дн.
-              </div>
-            </div>
+        {/* Content */}
+        <div className="p-4 overflow-y-auto space-y-4 text-xs">
+          {/* Main Image */}
+          <div className="w-full h-44 rounded-2xl bg-slate-50 dark:bg-[#18233C] border border-slate-100 dark:border-slate-800 flex items-center justify-center p-3">
+            <ProductImage 
+              src={item.image} 
+              alt={item.title} 
+              title={item.title} 
+              category={item.category} 
+              className="w-full h-full object-contain" 
+            />
           </div>
 
-          {/* Detailed Financial Breakdown (Strictly as specified in Prompt) */}
-          <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-2.5 text-xs">
-            <div className="flex justify-between items-center text-zinc-600">
-              <span>Цена продавца:</span>
-              <span className="font-mono font-bold text-zinc-900 text-sm">{item.sellerAskingPrice.toLocaleString()} ₽</span>
-            </div>
-            <div className="flex justify-between items-center text-zinc-600">
-              <span>Рыночная цена:</span>
-              <span className="font-mono font-semibold text-zinc-700">{item.currentMarketPrice.toLocaleString()} ₽</span>
-            </div>
-            
-            <div className="pt-2 border-t border-zinc-200/60 flex justify-between items-center text-zinc-500 text-[11px]">
-              <span className="flex items-center gap-1">
-                <Percent className="w-3 h-3 text-zinc-400" />
-                Комиссия площадки ({(currentCommissionRate * 100).toFixed(1)}%):
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                {item.brand}
               </span>
-              <span className="font-mono">−{fee.toLocaleString()} ₽</span>
-            </div>
-            <div className="flex justify-between items-center text-zinc-500 text-[11px]">
-              <span className="flex items-center gap-1">
-                <Truck className="w-3 h-3 text-zinc-400" />
-                Доставка покупателю:
+              <span className="text-[10px] font-medium text-slate-500">
+                {CONDITION_LABELS[item.condition]?.label || item.condition}
               </span>
-              <span className="font-mono">−{item.shippingCost.toLocaleString()} ₽</span>
             </div>
-
-            {/* Total Net Profit */}
-            <div className="pt-2.5 border-t border-zinc-200 flex justify-between items-center">
-              <div>
-                <div className="text-xs font-semibold text-zinc-900">Итоговая чистая прибыль:</div>
-                <div className="text-[10px] text-zinc-400">При перепродаже по рынку</div>
-              </div>
-              <div className={`text-base font-bold font-mono ${
-                netProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'
-              }`}>
-                {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} ₽
-                <span className="text-xs font-normal text-zinc-500 ml-1">({marginPercent}%)</span>
-              </div>
-            </div>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              {item.title}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-1 leading-relaxed">
+              «{item.sellerNote}»
+            </p>
           </div>
 
-          {/* Price History Sparkline */}
-          <div className="p-3 rounded-lg border border-zinc-100 bg-white">
-            <div className="flex items-center justify-between text-[11px] text-zinc-500 mb-1.5">
-              <span>История рыночной цены (7 дней)</span>
-              <span className="font-mono text-zinc-700">~{item.currentMarketPrice.toLocaleString()} ₽</span>
+          {/* Price Graph Sparkline */}
+          <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#18233C] border border-slate-100 dark:border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-bold text-slate-500 dark:text-slate-400">Тренд цены (7 дней)</span>
+              <span className="font-mono text-blue-600 dark:text-blue-400 font-bold">
+                ₽ {item.currentMarketPrice.toLocaleString()}
+              </span>
             </div>
-            <div className="w-full h-12 flex items-center justify-center">
-              <svg viewBox={`0 0 ${sparkWidth} ${sparkHeight}`} className="w-full h-full">
+            <div className="w-full flex justify-center pt-1">
+              <svg viewBox={`0 0 ${sparkWidth} ${sparkHeight}`} className="w-full h-12 overflow-visible">
                 <polyline
                   fill="none"
-                  stroke="#18181b"
-                  strokeWidth="2"
+                  stroke="#2563eb"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   points={points}
@@ -171,40 +131,52 @@ export const ProductDetailModal: React.FC = () => {
               </svg>
             </div>
           </div>
-        </div>
 
-        {/* Footer Actions */}
-        <div className="px-5 py-3.5 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between">
-          <div className="text-xs text-zinc-500">
-            {!canAfford ? (
-              <span className="text-amber-600 font-medium">Недостаточно баланса ({balance.toLocaleString()} ₽)</span>
-            ) : !hasSlot ? (
-              <span className="text-amber-600 font-medium">Склад переполнен ({usedWarehouseSlots}/{maxWarehouseSlots})</span>
-            ) : (
-              <span>Товар сразу поступит на склад</span>
-            )}
+          {/* Financial Breakdown */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#18233C] border border-slate-100 dark:border-slate-800 space-y-2">
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Цена продавца:</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">
+                ₽ {item.sellerAskingPrice.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Рыночная стоимость:</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                ₽ {item.currentMarketPrice.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Комиссия + Доставка:</span>
+              <span className="font-mono text-slate-500">
+                ₽ {(fee + item.shippingCost).toLocaleString()}
+              </span>
+            </div>
+            <div className="pt-2 border-t border-slate-200/80 dark:border-slate-700 flex justify-between font-bold text-xs">
+              <span className="text-slate-900 dark:text-white">Чистая выгода:</span>
+              <span className={`font-mono ${netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}`}>
+                {netProfit >= 0 ? '+' : ''}{netProfit.toLocaleString()} ₽ ({marginPercent}%)
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          {/* Actions */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
             <button
-              onClick={() => setSelectedMarketItem(null)}
-              className="px-3 py-1.5 rounded-lg border border-zinc-200 text-zinc-600 hover:bg-zinc-100 text-xs font-medium transition-colors"
+              onClick={handleNegotiate}
+              className="h-11 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
-              Отмена
+              <MessageSquare className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+              <span>Торговаться</span>
             </button>
+
             <button
-              onClick={() => {
-                const id = item.id;
-                setSelectedMarketItem(null);
-                startNegotiation(id);
-              }}
-              disabled={!hasSlot}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                !hasSlot
-                  ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
-                  : 'bg-zinc-900 hover:bg-zinc-800 text-white shadow-xs'
-              }`}
+              onClick={handleBuy}
+              disabled={!canAfford || !hasSlot}
+              className="h-11 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-500/20 cursor-pointer"
             >
-              Предложить цену
+              <ShoppingCart className="w-4 h-4" />
+              <span>Купить</span>
             </button>
           </div>
         </div>

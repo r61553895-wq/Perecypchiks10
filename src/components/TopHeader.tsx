@@ -1,17 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  LayoutDashboard, 
-  ShoppingBag, 
+  LayoutGrid, 
+  Store, 
   Package, 
   TrendingUp, 
-  PieChart, 
-  Award, 
-  Settings,
+  Gavel, 
+  Users, 
+  Building2, 
   Play, 
   Pause, 
-  ArrowRight, 
-  Radio,
-  Wallet
+  ChevronDown,
+  Sparkles,
+  MapPin,
+  Star,
+  FastForward,
+  Wallet,
+  Sun,
+  Moon,
+  Smartphone,
+  Maximize2,
+  PieChart,
+  Wifi,
+  BatteryMedium,
+  Signal
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { NavigationTab } from '../types';
@@ -20,9 +31,10 @@ export const TopHeader: React.FC = () => {
   const { 
     day, 
     balance, 
-    stats,
     inventory,
     marketListings,
+    auctions,
+    customerOrders,
     usedWarehouseSlots,
     maxWarehouseSlots,
     level,
@@ -30,187 +42,177 @@ export const TopHeader: React.FC = () => {
     advanceDay, 
     isAutoPlay, 
     setIsAutoPlay, 
-    gameSpeed, 
-    setGameSpeed,
     currentTab,
-    setCurrentTab
+    setCurrentTab,
+    currentLocation,
+    setCurrentLocation,
+    reputationPoints,
+    theme,
+    toggleTheme,
+    deviceFrame,
+    setDeviceFrame
   } = useGame();
 
-  const listedCount = inventory.filter(i => i.status === 'listed').length;
-  const currentEvent = activeEvents[0];
+  const [locationMenuOpen, setLocationMenuOpen] = useState(false);
 
-  // Primary navigation tabs required by the user:
-  // Сводка | Рынок | Склад | Продажи | Финансы
-  const primaryTabs: { id: NavigationTab; label: string; icon: React.ElementType; badge?: string | number }[] = [
-    { id: 'dashboard', label: 'Сводка', icon: LayoutDashboard },
-    { id: 'market', label: 'Рынок', icon: ShoppingBag, badge: marketListings.length },
-    { id: 'warehouse', label: 'Склад', icon: Package, badge: `${usedWarehouseSlots}/${maxWarehouseSlots}` },
-    { id: 'sales', label: 'Продажи', icon: TrendingUp, badge: listedCount > 0 ? listedCount : undefined },
-    { id: 'finances', label: 'Финансы', icon: PieChart }
+  const availableLocations = [
+    { name: 'Блошиный рынок', minLvl: 1, desc: 'Низкие цены, винтаж, высокий шанс дефектов' },
+    { name: 'Радиорынок Митино', minLvl: 1, desc: 'Электроника, комплектующие, честные продавцы' },
+    { name: 'Оптовые склады Садовод', minLvl: 2, desc: 'Новые аксессуары и гаджеты оптом' },
+    { name: 'Таможенный конфискат', minLvl: 3, desc: 'Редкие флагманы, авто и техника за полцены' },
+    { name: 'Закрытый VIP-клуб', minLvl: 4, desc: 'Люксовые лоты, швейцарские часы, гиперкары' },
   ];
 
+  const currentEvent = activeEvents[0];
+  const pendingOrders = customerOrders.filter(o => !o.isCompleted).length;
+
   return (
-    <header className="border-b border-zinc-200 bg-white select-none shrink-0 sticky top-0 z-40 w-full max-w-full overflow-hidden">
-      {/* Top Banner if Active Market Event */}
-      {currentEvent && (
-        <div className="bg-zinc-900 text-white px-3 sm:px-4 py-1 text-[11px] flex items-center justify-between">
-          <div className="flex items-center gap-2 max-w-2xl truncate">
-            <Radio className="w-3 h-3 text-emerald-400 shrink-0 animate-pulse" />
-            <span className="font-semibold text-zinc-100">{currentEvent.title}:</span>
-            <span className="text-zinc-300 truncate">{currentEvent.description}</span>
+    <header className="border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#131C31]/95 backdrop-blur-md select-none shrink-0 sticky top-0 z-40 w-full transition-colors">
+      {/* Mobile Status Bar (iOS / Android presentation) */}
+      <div className="flex items-center justify-between px-5 pt-2 pb-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 select-none">
+        <div className="flex items-center gap-1.5 font-medium tracking-tight">
+          <span>09:41</span>
+          <span className="text-[9px] text-slate-400">•</span>
+          <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">День {day}</span>
+        </div>
+
+        {/* Dynamic Controls in Status Bar: Theme toggle & Frame mode */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={toggleTheme}
+            className="p-1 rounded-full text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors"
+            title={theme === 'light' ? 'Переключить на тёмную тему' : 'Переключить на светлую тему'}
+            aria-label="Сменить тему"
+          >
+            {theme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+          </button>
+
+          <button
+            onClick={() => setDeviceFrame(!deviceFrame)}
+            className="hidden sm:flex items-center gap-1 p-1 rounded-full text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors"
+            title={deviceFrame ? 'Развернуть на весь экран' : 'Включить рамку смартфона'}
+            aria-label="Режим отображения"
+          >
+            {deviceFrame ? <Maximize2 className="w-3.5 h-3.5" /> : <Smartphone className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />}
+          </button>
+
+          <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+            <Signal className="w-3 h-3" />
+            <Wifi className="w-3 h-3" />
+            <BatteryMedium className="w-3.5 h-3.5" />
           </div>
-          <span className="text-[10px] font-mono text-zinc-400 shrink-0 ml-2">
+        </div>
+      </div>
+
+      {/* Active Market Event banner */}
+      {currentEvent && (
+        <div className="bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-950/40 dark:to-violet-950/40 border-y border-blue-100 dark:border-blue-900/50 px-4 py-1.5 text-xs flex items-center justify-between text-blue-950 dark:text-blue-100">
+          <div className="flex items-center gap-2 truncate">
+            <span className="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-ping shrink-0" />
+            <span className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider text-[10px]">
+              Событие:
+            </span>
+            <span className="font-medium truncate text-[11px]">{currentEvent.title}</span>
+          </div>
+          <span className="text-[10px] font-semibold text-violet-700 dark:text-violet-300 bg-violet-100/80 dark:bg-violet-900/50 px-2 py-0.5 rounded-full shrink-0 ml-2">
             {currentEvent.durationDays} дн.
           </span>
         </div>
       )}
 
-      {/* Main Top Navigation Row */}
-      <div className="h-14 px-2.5 sm:px-6 flex items-center justify-between gap-1.5 sm:gap-4 w-full max-w-full">
-        {/* Left: Brand Identity */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer touch-manipulation" onClick={() => setCurrentTab('dashboard')}>
-            <div className="w-7 h-7 rounded-md bg-zinc-900 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-2xs shrink-0">
-              ПР
+      {/* Main Header Bar */}
+      <div className="px-4 py-2.5 flex items-center justify-between gap-3 w-full">
+        {/* Left: Brand & Balance */}
+        <div className="flex items-center gap-3 min-w-0">
+          <button 
+            onClick={() => setCurrentTab('dashboard')}
+            className="flex items-center gap-2 text-left focus:outline-hidden group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-blue-600 dark:bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform shrink-0">
+              FL!P
             </div>
-            <div className="flex flex-col leading-none">
-              <span className="font-bold text-xs sm:text-sm tracking-tight text-zinc-900">
-                ПЕРЕКУП
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Капитал
               </span>
-              <span className="hidden sm:block text-[10px] text-zinc-400 font-mono tracking-tighter mt-0.5">
-                бизнес-симулятор
+              <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white truncate">
+                ₽ {balance.toLocaleString()}
               </span>
             </div>
-          </div>
-
-          <span className="hidden xl:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
-            Ур. {level}
-          </span>
+          </button>
         </div>
 
-        {/* Center: Primary Compact Navigation (Сводка | Рынок | Склад | Продажи | Финансы) */}
-        <nav className="hidden md:flex items-center gap-1">
-          {primaryTabs.map((tab, idx) => {
-            const Icon = tab.icon;
-            const isActive = currentTab === tab.id;
-            return (
-              <React.Fragment key={tab.id}>
-                {idx > 0 && <span className="text-zinc-300 text-xs select-none">|</span>}
-                <button
-                  onClick={() => setCurrentTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-zinc-900 text-white shadow-xs'
-                      : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
-                  <span>{tab.label}</span>
-                  {tab.badge !== undefined && (
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                      isActive 
-                        ? 'bg-zinc-800 text-zinc-200' 
-                        : 'bg-zinc-100 text-zinc-600 border border-zinc-200'
-                    }`}>
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              </React.Fragment>
-            );
-          })}
-
-          {/* Secondary tabs: Развитие & Настройки */}
-          <span className="text-zinc-300 text-xs select-none ml-1">|</span>
-          <button
-            onClick={() => setCurrentTab('upgrades')}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
-              currentTab === 'upgrades'
-                ? 'bg-zinc-900 text-white shadow-xs'
-                : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'
-            }`}
-            title="Развитие бизнеса"
-          >
-            <Award className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Развитие</span>
-          </button>
-          <button
-            onClick={() => setCurrentTab('settings')}
-            className={`p-1.5 rounded-md text-xs font-medium transition-all ${
-              currentTab === 'settings'
-                ? 'bg-zinc-900 text-white shadow-xs'
-                : 'text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100'
-            }`}
-            title="Настройки"
-          >
-            <Settings className="w-3.5 h-3.5" />
-          </button>
-        </nav>
-
-        {/* Right: Key Business Metrics & Step Simulation Controls */}
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          {/* Capital / Balance: Desktop View */}
-          <div className="text-right hidden sm:block">
-            <div className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">Баланс</div>
-            <div className="text-sm sm:text-base font-bold font-mono text-zinc-900 leading-none">
-              {balance.toLocaleString()} ₽
-            </div>
-          </div>
-
-          {/* Capital / Balance: Compact Mobile View */}
-          <div 
-            className="sm:hidden flex items-center gap-1 px-1.5 py-1 rounded-md bg-zinc-100/90 border border-zinc-200 text-xs font-mono font-bold text-zinc-900 shrink-0"
-            title={`Баланс: ${balance.toLocaleString()} ₽`}
-          >
-            <Wallet className="w-3 h-3 text-zinc-500 shrink-0" />
-            <span>
-              {balance >= 1_000_000 
-                ? `${(balance / 1_000_000).toFixed(1)}М` 
-                : `${Math.round(balance / 1000)}к`} ₽
-            </span>
-          </div>
-
-          {/* Day Display */}
-          <div className="px-1.5 sm:px-2.5 py-1 rounded-md bg-zinc-100 border border-zinc-200 text-xs font-mono font-medium text-zinc-800 shrink-0 whitespace-nowrap">
-            <span className="hidden sm:inline">День </span>
-            <span className="sm:hidden">Д.</span>
-            {day}
-          </div>
-
-          {/* Speed & Auto-play (hidden on mobile) */}
-          <div className="hidden sm:flex items-center gap-1 pl-1 border-l border-zinc-200">
+        {/* Right Actions: Location picker, Auto-play, Primary Next Day CTA */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Location Badge / Dropdown */}
+          <div className="relative">
             <button
-              onClick={() => setGameSpeed(gameSpeed === 1 ? 2 : 1)}
-              className={`px-2 py-1 rounded-md border text-xs font-mono transition-colors ${
-                gameSpeed === 2 
-                  ? 'bg-zinc-900 text-white border-zinc-900' 
-                  : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
-              }`}
-              title="Скорость времени (1x / 2x)"
+              onClick={() => setLocationMenuOpen(!locationMenuOpen)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors"
             >
-              {gameSpeed}x
+              <MapPin className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+              <span className="max-w-[85px] sm:max-w-[130px] truncate">{currentLocation}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
             </button>
-            <button
-              onClick={() => setIsAutoPlay(!isAutoPlay)}
-              className={`p-1.5 rounded-md border text-xs transition-colors ${
-                isAutoPlay 
-                  ? 'bg-amber-50 text-amber-700 border-amber-300' 
-                  : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
-              }`}
-              title={isAutoPlay ? 'Приостановить ход времени' : 'Автоматический ход времени'}
-            >
-              {isAutoPlay ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-            </button>
+
+            {locationMenuOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#131C31] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 animate-in fade-in zoom-in-95">
+                <div className="px-2 py-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Торговая локация
+                </div>
+                {availableLocations.map(loc => {
+                  const isLocked = level < loc.minLvl;
+                  const isSelected = currentLocation === loc.name;
+                  return (
+                    <button
+                      key={loc.name}
+                      disabled={isLocked}
+                      onClick={() => {
+                        setCurrentLocation(loc.name);
+                        setLocationMenuOpen(false);
+                      }}
+                      className={`w-full text-left p-2.5 rounded-xl text-xs transition-colors mb-1 flex flex-col ${
+                        isSelected 
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200' 
+                          : isLocked 
+                            ? 'opacity-40 cursor-not-allowed text-slate-400' 
+                            : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="font-bold text-xs">{loc.name}</span>
+                        {isLocked && <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold">Ур. {loc.minLvl}+</span>}
+                      </div>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{loc.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Primary Action: Advance Day */}
+          {/* Auto play button */}
+          <button
+            onClick={() => setIsAutoPlay(!isAutoPlay)}
+            className={`p-2 rounded-xl border text-xs transition-colors ${
+              isAutoPlay 
+                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700' 
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:text-slate-900'
+            }`}
+            title={isAutoPlay ? 'Приостановить авто-день' : 'Автоматический ход дней'}
+          >
+            {isAutoPlay ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          </button>
+
+          {/* PRIMARY CTA: Royal Blue Next Day Button */}
           <button
             onClick={advanceDay}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 active:scale-95 text-white text-xs font-semibold transition-all shadow-xs shrink-0 whitespace-nowrap touch-manipulation"
+            className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs sm:text-sm tracking-tight transition-all shadow-md shadow-blue-500/25 shrink-0 whitespace-nowrap cursor-pointer touch-manipulation"
             title="Перейти к следующему дню [Пробел]"
           >
-            <span>След. день</span>
-            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+            <FastForward className="w-4 h-4 fill-white shrink-0" />
+            <span className="hidden xs:inline">След. день</span>
+            <span className="xs:hidden">День +1</span>
           </button>
         </div>
       </div>
@@ -219,43 +221,111 @@ export const TopHeader: React.FC = () => {
 };
 
 export const MobileBottomNav: React.FC = () => {
-  const { currentTab, setCurrentTab, marketListings, usedWarehouseSlots, maxWarehouseSlots, inventory } = useGame();
-  const listedCount = inventory.filter(i => i.status === 'listed').length;
+  const { 
+    currentTab, 
+    setCurrentTab, 
+    marketListings, 
+    auctions, 
+    customerOrders, 
+    usedWarehouseSlots, 
+    maxWarehouseSlots 
+  } = useGame();
+  
+  const pendingOrders = customerOrders.filter(o => !o.isCompleted).length;
 
-  const tabs: { id: NavigationTab; label: string; icon: React.ElementType; badge?: string | number }[] = [
-    { id: 'dashboard', label: 'Сводка', icon: LayoutDashboard },
-    { id: 'market', label: 'Рынок', icon: ShoppingBag, badge: marketListings.length },
-    { id: 'warehouse', label: 'Склад', icon: Package, badge: `${usedWarehouseSlots}/${maxWarehouseSlots}` },
-    { id: 'sales', label: 'Продажи', icon: TrendingUp, badge: listedCount > 0 ? listedCount : undefined },
-    { id: 'finances', label: 'Финансы', icon: PieChart },
-    { id: 'upgrades', label: 'Развитие', icon: Award }
+  // Exactly 5 clean, ergonomic mobile tabs (as requested in point 7 of prompt)
+  const tabs: { 
+    id: NavigationTab; 
+    label: string; 
+    icon: React.ElementType; 
+    badge?: string | number;
+    matchTabs?: NavigationTab[];
+  }[] = [
+    { 
+      id: 'dashboard', 
+      label: 'Главная', 
+      icon: LayoutGrid 
+    },
+    { 
+      id: 'market', 
+      label: 'Рынок', 
+      icon: Store, 
+      badge: marketListings.length 
+    },
+    { 
+      id: 'auctions', 
+      label: 'Аукционы', 
+      icon: Gavel, 
+      badge: auctions.length > 0 ? auctions.length : undefined 
+    },
+    { 
+      id: 'warehouse', 
+      label: 'Склад', 
+      icon: Package, 
+      badge: `${usedWarehouseSlots}/${maxWarehouseSlots}`,
+      matchTabs: ['warehouse', 'showroom', 'clients']
+    },
+    { 
+      id: 'finances', 
+      label: 'Бизнес', 
+      icon: PieChart, 
+      badge: pendingOrders > 0 ? pendingOrders : undefined,
+      matchTabs: ['finances', 'upgrades', 'sales', 'settings']
+    }
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(3.5rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur-md border-t border-zinc-200 flex items-center justify-around z-40 px-1 shadow-lg select-none">
-      {tabs.map(tab => {
-        const Icon = tab.icon;
-        const isActive = currentTab === tab.id;
-        return (
-          <button
-            key={tab.id}
-            onClick={() => setCurrentTab(tab.id)}
-            className={`flex flex-col items-center justify-center flex-1 py-1 relative touch-manipulation active:scale-95 transition-transform ${
-              isActive ? 'text-zinc-900 font-bold' : 'text-zinc-400 font-medium'
-            }`}
-          >
-            <div className="relative">
-              <Icon className="w-4 h-4" />
-              {tab.badge !== undefined && (
-                <span className="absolute -top-1 -right-2 text-[8px] font-mono bg-zinc-900 text-white px-1 rounded-full leading-tight">
-                  {typeof tab.badge === 'string' ? tab.badge.split('/')[0] : tab.badge}
+    <nav className="fixed bottom-0 left-0 right-0 max-w-full z-40 select-none">
+      <div className="bg-white/95 dark:bg-[#131C31]/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 pb-[max(env(safe-area-inset-bottom,0px),12px)] pt-2 shadow-2xl">
+        <div className="flex items-center justify-around px-2 max-w-md mx-auto">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = tab.matchTabs 
+              ? tab.matchTabs.includes(currentTab) 
+              : currentTab === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setCurrentTab(tab.id)}
+                className={`flex flex-col items-center justify-center flex-1 py-1 relative touch-manipulation active:scale-95 transition-all ${
+                  isActive 
+                    ? 'text-blue-600 dark:text-blue-400 font-bold' 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                <div className="relative">
+                  <div className={`p-1.5 rounded-xl transition-colors ${
+                    isActive 
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
+                      : 'hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+
+                  {tab.badge !== undefined && (
+                    <span className="absolute -top-1 -right-2 text-[9px] font-bold font-mono bg-blue-600 text-white px-1.5 py-0.2 rounded-full leading-tight shadow-sm">
+                      {typeof tab.badge === 'string' ? tab.badge.split('/')[0] : tab.badge}
+                    </span>
+                  )}
+                </div>
+
+                <span className="text-[11px] tracking-tight mt-1 font-medium whitespace-nowrap">
+                  {tab.label}
                 </span>
-              )}
-            </div>
-            <span className="text-[9px] mt-0.5 tracking-tight">{tab.label}</span>
-          </button>
-        );
-      })}
+
+                {/* Subtle active indicator pill */}
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-0.5" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* iOS Home Bar Indicator */}
+        <div className="w-32 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-2 opacity-60" />
+      </div>
     </nav>
   );
 };

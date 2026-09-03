@@ -161,13 +161,45 @@ export interface GameStats {
   unprofitableSales: number;
   bestSingleProfit: number;
   fastestSaleDays: number;
+  repairsDone: number;
+  fakesDiscovered: number;
+  auctionsWon: number;
+}
+
+export interface AuctionLot {
+  id: string;
+  title: string;
+  category: ItemCategory;
+  condition: ItemCondition;
+  image: string;
+  marketPrice: number;
+  currentBid: number;
+  highestBidder: string;
+  isPlayerWinning: boolean;
+  secondsRemaining: number;
+  bidCount: number;
+}
+
+export interface CustomerOrder {
+  id: string;
+  clientName: string;
+  clientArchetype: string;
+  category: ItemCategory;
+  requestedTitle: string;
+  comment: string;
+  budget: number;
+  bonusReward: number;
+  isCompleted: boolean;
 }
 
 export type NavigationTab = 
   | 'dashboard' 
   | 'market' 
+  | 'auctions'
+  | 'clients'
   | 'warehouse' 
+  | 'showroom'
+  | 'upgrades' 
   | 'sales' 
   | 'finances' 
-  | 'upgrades' 
   | 'settings';

@@ -1,15 +1,22 @@
 import React from 'react';
 import { 
-  Award, 
-  Package, 
-  Percent, 
+  TrendingUp, 
+  Coins, 
+  BarChart3, 
+  Search, 
+  Wrench, 
   Truck, 
-  ShieldCheck, 
-  Lock, 
   Check, 
+  Sparkles, 
+  Trophy, 
+  ShoppingBag, 
+  CheckCircle2, 
+  Award,
   Zap,
-  ArrowRight,
-  TrendingUp
+  PackageCheck,
+  PieChart,
+  History,
+  Settings
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { LEVEL_DEFINITIONS } from '../../data/catalog';
@@ -18,108 +25,182 @@ export const UpgradesView: React.FC = () => {
   const { 
     level, 
     xp, 
-    nextLevelXp, 
     balance, 
-    upgrades, 
-    purchaseUpgrade 
+    skills,
+    upgradeSkill,
+    upgrades,
+    purchaseUpgrade,
+    setCurrentTab
   } = useGame();
 
   const currentLevelInfo = LEVEL_DEFINITIONS.find(l => l.level === level) || LEVEL_DEFINITIONS[0];
   const nextLevelInfo = LEVEL_DEFINITIONS.find(l => l.level === level + 1);
 
-  // Compute XP progress %
   const currentLevelBaseXp = currentLevelInfo.xpRequired;
   const targetXp = nextLevelInfo ? nextLevelInfo.xpRequired : currentLevelBaseXp;
   const progressPercent = nextLevelInfo 
     ? Math.min(100, Math.max(0, Math.round(((xp - currentLevelBaseXp) / (targetXp - currentLevelBaseXp || 1)) * 100)))
     : 100;
 
+  const skillDefinitions = [
+    {
+      key: 'bargain' as const,
+      title: 'Торг',
+      icon: Coins,
+      description: 'Позволяет сбивать цену продавца и снижает шанс отказа',
+      baseCost: 4200,
+      currentLevel: skills.bargain
+    },
+    {
+      key: 'analytics' as const,
+      title: 'Аналитика',
+      icon: BarChart3,
+      description: 'Подсвечивает супер-выгодные сделки и реальные тренды цен',
+      baseCost: 5600,
+      currentLevel: skills.analytics
+    },
+    {
+      key: 'appraisal' as const,
+      title: 'Оценка',
+      icon: Search,
+      description: 'Мгновенно выявляет скрытые дефекты и реплики устройств',
+      baseCost: 4900,
+      currentLevel: skills.appraisal
+    },
+    {
+      key: 'repair' as const,
+      title: 'Ремонт',
+      icon: Wrench,
+      description: 'Увеличивает маржинальность и качество предпродажной подготовки',
+      baseCost: 7000,
+      currentLevel: skills.repair
+    },
+    {
+      key: 'logistics' as const,
+      title: 'Логистика',
+      icon: Truck,
+      description: 'Расширяет вместимость инвентаря и снижает стоимость доставки',
+      baseCost: 6300,
+      currentLevel: skills.logistics
+    }
+  ];
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Level Progression Card */}
-      <div className="p-6 rounded-xl bg-white border border-zinc-200/90 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded">
-                Уровень бизнеса {level} из 5
-              </span>
-              <span className="text-xs text-zinc-400 font-mono">
-                {xp.toLocaleString()} XP
-              </span>
-            </div>
-            <h2 className="text-lg font-bold text-zinc-900">{currentLevelInfo.title}</h2>
-            <p className="text-xs text-zinc-500 mt-1 max-w-xl leading-relaxed">
-              {currentLevelInfo.description}
-            </p>
-          </div>
+    <div className="space-y-4 max-w-full pb-8 select-none">
+      {/* Sub-navigation Switcher */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-[#131C31] rounded-2xl border border-slate-200/80 dark:border-slate-800 text-xs">
+        <button
+          onClick={() => setCurrentTab('finances')}
+          className="flex-1 py-2 px-2 rounded-xl font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1"
+        >
+          <PieChart className="w-3.5 h-3.5" />
+          <span>P&L</span>
+        </button>
 
-          {nextLevelInfo && (
-            <div className="text-right sm:text-right shrink-0">
-              <div className="text-[11px] text-zinc-500">Следующий ранг:</div>
-              <div className="text-sm font-semibold text-zinc-900 mt-0.5">{nextLevelInfo.title}</div>
-              <div className="text-xs font-mono text-zinc-400 mt-0.5">
-                Требуется: {nextLevelInfo.xpRequired.toLocaleString()} XP
-              </div>
-            </div>
-          )}
-        </div>
+        <button
+          className="flex-1 py-2 px-2 rounded-xl font-bold bg-white dark:bg-[#18233C] text-blue-600 dark:text-blue-400 shadow-xs transition-all flex items-center justify-center gap-1"
+        >
+          <Zap className="w-3.5 h-3.5" />
+          <span>Навыки</span>
+        </button>
 
-        {/* XP Progress Bar */}
-        {nextLevelInfo && (
-          <div className="mt-4 pt-3 border-t border-zinc-100">
-            <div className="flex justify-between text-xs mb-1.5 text-zinc-500">
-              <span>Прогресс до следующего ранга</span>
-              <span className="font-mono font-medium text-zinc-700">{progressPercent}%</span>
-            </div>
-            <div className="w-full h-2.5 rounded-full bg-zinc-100 overflow-hidden border border-zinc-200/60">
-              <div 
-                className="h-full bg-zinc-900 transition-all duration-300 rounded-full"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-          </div>
-        )}
+        <button
+          onClick={() => setCurrentTab('sales')}
+          className="flex-1 py-2 px-2 rounded-xl font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1"
+        >
+          <History className="w-3.5 h-3.5" />
+          <span>Сделки</span>
+        </button>
+
+        <button
+          onClick={() => setCurrentTab('settings')}
+          className="flex-1 py-2 px-2 rounded-xl font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1"
+        >
+          <Settings className="w-3.5 h-3.5" />
+          <span>Опции</span>
+        </button>
       </div>
 
-      {/* Levels Roadmap Preview */}
-      <div className="p-6 rounded-xl bg-white border border-zinc-200/90 shadow-2xs">
-        <div className="border-b border-zinc-100 pb-3 mb-4">
-          <h3 className="text-sm font-bold text-zinc-900">Ступени масштабирования торговли</h3>
-          <p className="text-[11px] text-zinc-500">Открывайте более маржинальные категории и дорогостоящие рынки с ростом репутации</p>
+      {/* Level Progress Card */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#131C31] border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-black">
+              {level}
+            </div>
+            <div>
+              <h2 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+                {currentLevelInfo.title}
+              </h2>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                Опыт: {xp.toLocaleString()} XP
+              </span>
+            </div>
+          </div>
+
+          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+            {progressPercent}%
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {LEVEL_DEFINITIONS.map(l => {
-            const isUnlocked = level >= l.level;
-            const isCurrent = level === l.level;
+        {/* Progress bar */}
+        <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+          <div 
+            className="h-full rounded-full bg-blue-600 dark:bg-blue-500 transition-all duration-300"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Skills Section */}
+      <div className="space-y-3">
+        <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1">
+          Навыки предпринимателя
+        </h3>
+
+        <div className="space-y-3">
+          {skillDefinitions.map(s => {
+            const Icon = s.icon;
+            const cost = Math.round(s.baseCost * Math.pow(1.4, s.currentLevel));
+            const isMax = s.currentLevel >= 5;
+            const canAfford = balance >= cost && !isMax;
 
             return (
               <div 
-                key={l.level}
-                className={`p-3.5 rounded-xl border transition-all ${
-                  isCurrent 
-                    ? 'border-zinc-900 bg-zinc-50/70 shadow-2xs' 
-                    : isUnlocked 
-                    ? 'border-zinc-200 bg-white' 
-                    : 'border-dashed border-zinc-200 bg-zinc-50/40 opacity-70'
-                }`}
+                key={s.key}
+                className="p-4 rounded-3xl bg-white dark:bg-[#131C31] border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono text-zinc-400">Ур. {l.level}</span>
-                  {isUnlocked ? (
-                    <span className="w-4 h-4 rounded-full bg-zinc-900 text-white flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5" />
-                    </span>
-                  ) : (
-                    <Lock className="w-3.5 h-3.5 text-zinc-400" />
-                  )}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-[#18233C] text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">{s.title}</h4>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300">
+                          Ур. {s.currentLevel}/5
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                        {s.description}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-xs font-semibold text-zinc-900 leading-tight">
-                  {l.title}
-                </div>
-                <div className="text-[11px] text-zinc-500 mt-1.5 leading-snug line-clamp-3">
-                  {l.description}
+
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-300">
+                    {isMax ? 'Максимум' : `₽ ${cost.toLocaleString()}`}
+                  </span>
+
+                  <button
+                    disabled={!canAfford || isMax}
+                    onClick={() => upgradeSkill(s.key)}
+                    className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition-all shadow-sm shadow-blue-500/20 touch-manipulation cursor-pointer"
+                  >
+                    {isMax ? 'Прокачано' : 'Улучшить'}
+                  </button>
                 </div>
               </div>
             );
@@ -127,103 +208,41 @@ export const UpgradesView: React.FC = () => {
         </div>
       </div>
 
-      {/* Business Infrastructure Upgrades */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-zinc-900">Инфраструктура и улучшения</h3>
-            <p className="text-[11px] text-zinc-500">Инвестируйте свободный капитал в постоянное снижение издержек и расширение емкости</p>
-          </div>
-          <div className="text-xs text-zinc-500">
-            Баланс: <span className="font-mono font-bold text-zinc-900">{balance.toLocaleString()} ₽</span>
-          </div>
-        </div>
+      {/* Business Upgrades */}
+      <div className="space-y-3 pt-2">
+        <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1">
+          Улучшения бизнеса
+        </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {upgrades.map(upg => {
-            const isMax = upg.level >= upg.maxLevel;
-            const canAfford = balance >= upg.cost;
-            const isLevelLocked = level < upg.unlockedAtPlayerLevel;
-
-            let Icon = Package;
-            if (upg.effectType === 'fee_discount') Icon = Percent;
-            if (upg.effectType === 'shipping_discount') Icon = Truck;
-            if (upg.effectType === 'deal_radar') Icon = Zap;
-            if (upg.effectType === 'reputation_boost') Icon = ShieldCheck;
+        <div className="space-y-3">
+          {upgrades.map(u => {
+            const isMax = u.level >= u.maxLevel;
+            const canAfford = balance >= u.cost && !isMax;
 
             return (
               <div 
-                key={upg.id}
-                className="p-5 rounded-xl bg-white border border-zinc-200/90 shadow-2xs flex flex-col justify-between"
+                key={u.id}
+                className="p-4 rounded-3xl bg-white dark:bg-[#131C31] border border-slate-200/90 dark:border-slate-800 shadow-xs flex items-center justify-between gap-3"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-700">
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-zinc-900">{upg.title}</h4>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] font-mono text-zinc-500">
-                            Уровень {upg.level} из {upg.maxLevel}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {isMax && (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
-                        MAX
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-zinc-600 leading-relaxed mt-2">
-                    {upg.description}
-                  </p>
-
-                  {/* Level dots */}
-                  <div className="mt-3 flex items-center gap-1.5">
-                    {Array.from({ length: upg.maxLevel }).map((_, i) => (
-                      <div 
-                        key={i}
-                        className={`h-1.5 flex-1 rounded-full ${
-                          i < upg.level ? 'bg-zinc-900' : 'bg-zinc-100 border border-zinc-200/60'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
-                  {isMax ? (
-                    <span className="text-xs text-zinc-400 font-medium">Максимальный уровень</span>
-                  ) : isLevelLocked ? (
-                    <span className="text-xs text-amber-700 font-medium flex items-center gap-1">
-                      <Lock className="w-3 h-3" />
-                      Требуется уровень {upg.unlockedAtPlayerLevel}
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">{u.title}</h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                      Ур. {u.level}/{u.maxLevel}
                     </span>
-                  ) : (
-                    <div className="font-mono text-xs font-bold text-zinc-900">
-                      Стоимость: {upg.cost.toLocaleString()} ₽
-                    </div>
-                  )}
-
-                  {!isMax && !isLevelLocked && (
-                    <button
-                      onClick={() => purchaseUpgrade(upg.id)}
-                      disabled={!canAfford}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                        !canAfford 
-                          ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed' 
-                          : 'bg-zinc-900 hover:bg-zinc-800 text-white shadow-xs'
-                      }`}
-                    >
-                      {!canAfford ? 'Недостаточно средств' : 'Улучшить'}
-                    </button>
-                  )}
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {u.description}
+                  </p>
                 </div>
+
+                <button
+                  disabled={!canAfford || isMax}
+                  onClick={() => purchaseUpgrade(u.id)}
+                  className="h-10 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition-all shadow-sm shadow-blue-500/20 shrink-0 touch-manipulation cursor-pointer"
+                >
+                  {isMax ? 'Куплено' : `₽ ${u.cost.toLocaleString()}`}
+                </button>
               </div>
             );
           })}

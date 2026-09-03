@@ -13,7 +13,9 @@ import {
   SellerArchetype,
   SellerMood,
   ActiveNegotiation,
-  NegotiationRound
+  NegotiationRound,
+  AuctionLot,
+  CustomerOrder
 } from '../types';
 import { 
   INITIAL_PRODUCT_TEMPLATES, 
@@ -80,59 +82,306 @@ interface GameContextType {
   setIsAutoPlay: (auto: boolean) => void;
   gameSpeed: number;
   setGameSpeed: (speed: number) => void;
+
+  // Auctions
+  auctions: AuctionLot[];
+  bidAuction: (lotId: string, amount: number) => boolean;
+
+  // Customer Orders
+  customerOrders: CustomerOrder[];
+  fulfillOrder: (orderId: string, inventoryItemId: string) => boolean;
+
+  // Showroom
+  showroomRented: boolean;
+  rentShowroom: () => boolean;
+
+  // Skills
+  skills: {
+    bargain: number;
+    analytics: number;
+    appraisal: number;
+    repair: number;
+    logistics: number;
+  };
+  upgradeSkill: (skillKey: 'bargain' | 'analytics' | 'appraisal' | 'repair' | 'logistics') => boolean;
+
+  // Location & FM Rep
+  currentLocation: string;
+  setCurrentLocation: (loc: string) => void;
+  reputationPoints: number;
+
+  // Visual Theme & Presentation Mode (Light by default as requested in prompt)
+  theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
+  toggleTheme: () => void;
+  deviceFrame: boolean;
+  setDeviceFrame: (frame: boolean) => void;
 }
 
-const STORAGE_KEY = 'reseller_simulator_save_rub_v1';
+export const STORAGE_KEY = 'reseller_simulator_save_rub_v1';
+export const LEGACY_STORAGE_KEY = 'reseller_simulator_save_v1';
 const INITIAL_BALANCE = 125000; // Starting capital in ₽
+
+const DEFAULT_STATS: GameStats = {
+  totalRevenue: 0,
+  totalExpenses: 0,
+  totalFeesPaid: 0,
+  totalShippingPaid: 0,
+  totalNetProfit: 0,
+  itemsBought: 0,
+  itemsSold: 0,
+  profitableSales: 0,
+  unprofitableSales: 0,
+  bestSingleProfit: 0,
+  fastestSaleDays: 99,
+  repairsDone: 0,
+  fakesDiscovered: 0,
+  auctionsWon: 0
+};
+
+const DEFAULT_AUCTIONS: AuctionLot[] = [
+  {
+    id: 'auc_macbook_m3',
+    title: 'MacBook Pro 16 M3 Max 1TB',
+    category: 'laptops_pc',
+    condition: 'good',
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&auto=format&fit=crop&q=80',
+    marketPrice: 221000,
+    currentBid: 131609,
+    highestBidder: 'Игорь Скупщик',
+    isPlayerWinning: false,
+    secondsRemaining: 30,
+    bidCount: 7
+  },
+  {
+    id: 'auc_xbox_series_x',
+    title: 'Xbox Series X 1TB Black',
+    category: 'accessories',
+    condition: 'like_new',
+    image: 'https://images.unsplash.com/photo-1600080972464-8e5f35f63d08?w=600&auto=format&fit=crop&q=80',
+    marketPrice: 52000,
+    currentBid: 32400,
+    highestBidder: 'Иван Барыга',
+    isPlayerWinning: false,
+    secondsRemaining: 33,
+    bidCount: 4
+  },
+  {
+    id: 'auc_sony_xm5',
+    title: 'Sony WH-1000XM5 Black',
+    category: 'audio_photo',
+    condition: 'good',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&auto=format&fit=crop&q=80',
+    marketPrice: 24500,
+    currentBid: 14200,
+    highestBidder: 'Олег Реселлер',
+    isPlayerWinning: false,
+    secondsRemaining: 16,
+    bidCount: 5
+  }
+];
+
+const DEFAULT_CUSTOMER_ORDERS: CustomerOrder[] = [
+  {
+    id: 'ord_leica',
+    clientName: 'Александр',
+    clientArchetype: 'Геймер',
+    category: 'luxury_drops',
+    requestedTitle: 'Камера Leica M6 TTL 0.72 Black',
+    comment: 'Куплю в личную коллекцию Камера Leica M6 TTL 0.72 Black. Быстрый выкуп!',
+    budget: 295801,
+    bonusReward: 44370,
+    isCompleted: false
+  },
+  {
+    id: 'ord_s22',
+    clientName: 'Михаил',
+    clientArchetype: 'IT-специалист',
+    category: 'smartphones',
+    requestedTitle: 'Samsung Galaxy S22 128GB',
+    comment: 'Срочно нужен надежный смартфон Samsung Galaxy S22 128GB для рабочего софта...',
+    budget: 36376,
+    bonusReward: 5456,
+    isCompleted: false
+  },
+  {
+    id: 'ord_ip15',
+    clientName: 'Валентин',
+    clientArchetype: 'Бизнесмен',
+    category: 'smartphones',
+    requestedTitle: 'iPhone 15 Pro 512GB Titanium',
+    comment: 'iPhone 15 Pro 512GB Titanium в идеальном состоянии для командировки...',
+    budget: 120690,
+    bonusReward: 18103,
+    isCompleted: false
+  },
+  {
+    id: 'ord_rtx4090',
+    clientName: 'Артем',
+    clientArchetype: 'Фотограф',
+    category: 'laptops_pc',
+    requestedTitle: 'NVIDIA GeForce RTX 4090 24GB',
+    comment: 'NVIDIA GeForce RTX 4090 24GB для рендера видео 8K и 3D-графики...',
+    budget: 221059,
+    bonusReward: 33158,
+    isCompleted: false
+  },
+  {
+    id: 'ord_audio',
+    clientName: 'Константин',
+    clientArchetype: 'Фотограф',
+    category: 'audio_photo',
+    requestedTitle: 'Studio ANC Wireless Over-Ear',
+    comment: 'Качественные студийные наушники для сведения звука на выезде.',
+    budget: 35000,
+    bonusReward: 5200,
+    isCompleted: false
+  }
+];
+
+function getSavedGameState(): any | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+  } catch (err) {
+    console.warn('Could not parse saved game from localStorage:', err);
+  }
+  return null;
+}
 
 export const GameContext = createContext<GameContextType | undefined>(undefined);
 
 export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load saved state or default
-  const [day, setDay] = useState<number>(1);
-  const [balance, setBalance] = useState<number>(INITIAL_BALANCE);
-  const [level, setLevel] = useState<number>(1);
-  const [xp, setXp] = useState<number>(0);
-  const [reputation, setReputation] = useState<number>(4.85);
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [marketListings, setMarketListings] = useState<MarketListing[]>([]);
-  const [salesHistory, setSalesHistory] = useState<CompletedSale[]>([]);
-  const [financialHistory, setFinancialHistory] = useState<DayFinancialRecord[]>([
-    {
-      day: 1,
-      balance: INITIAL_BALANCE,
-      dailyRevenue: 0,
-      dailyExpenses: 0,
-      dailyNetProfit: 0,
-      inventoryValuation: 0
+  // Synchronously load saved state so that all useState hooks receive restored data on first render
+  const savedData = useMemo(() => getSavedGameState(), []);
+
+  const [day, setDay] = useState<number>(() => savedData?.day ?? 1);
+  const [balance, setBalance] = useState<number>(() => typeof savedData?.balance === 'number' ? savedData.balance : INITIAL_BALANCE);
+  const [level, setLevel] = useState<number>(() => savedData?.level ?? 1);
+  const [xp, setXp] = useState<number>(() => savedData?.xp ?? 0);
+  const [reputation, setReputation] = useState<number>(() => savedData?.reputation ?? 4.85);
+  const [inventory, setInventory] = useState<InventoryItem[]>(() => Array.isArray(savedData?.inventory) ? savedData.inventory : []);
+  const [marketListings, setMarketListings] = useState<MarketListing[]>(() => {
+    if (Array.isArray(savedData?.marketListings) && savedData.marketListings.length > 0) {
+      return savedData.marketListings;
     }
-  ]);
-  const [upgrades, setUpgrades] = useState<BusinessUpgrade[]>(INITIAL_UPGRADES);
-  const [activeEvents, setActiveEvents] = useState<MarketEvent[]>([]);
-  const [stats, setStats] = useState<GameStats>({
-    totalRevenue: 0,
-    totalExpenses: 0,
-    totalFeesPaid: 0,
-    totalShippingPaid: 0,
-    totalNetProfit: 0,
-    itemsBought: 0,
-    itemsSold: 0,
-    profitableSales: 0,
-    unprofitableSales: 0,
-    bestSingleProfit: 0,
-    fastestSaleDays: 99
+    return [];
   });
-  const [currentTab, setCurrentTab] = useState<NavigationTab>('dashboard');
+  const [salesHistory, setSalesHistory] = useState<CompletedSale[]>(() => Array.isArray(savedData?.salesHistory) ? savedData.salesHistory : []);
+  const [financialHistory, setFinancialHistory] = useState<DayFinancialRecord[]>(() => 
+    Array.isArray(savedData?.financialHistory) && savedData.financialHistory.length > 0
+      ? savedData.financialHistory
+      : [{
+          day: 1,
+          balance: INITIAL_BALANCE,
+          dailyRevenue: 0,
+          dailyExpenses: 0,
+          dailyNetProfit: 0,
+          inventoryValuation: 0
+        }]
+  );
+  const [upgrades, setUpgrades] = useState<BusinessUpgrade[]>(() => {
+    if (Array.isArray(savedData?.upgrades) && savedData.upgrades.length > 0) {
+      return INITIAL_UPGRADES.map(def => {
+        const found = savedData.upgrades.find((u: BusinessUpgrade) => u.id === def.id);
+        return found ? { ...def, level: found.level, cost: found.cost ?? def.cost } : def;
+      });
+    }
+    return INITIAL_UPGRADES;
+  });
+  const [activeEvents, setActiveEvents] = useState<MarketEvent[]>(() => Array.isArray(savedData?.activeEvents) ? savedData.activeEvents : []);
+  const [stats, setStats] = useState<GameStats>(() => savedData?.stats ? { ...DEFAULT_STATS, ...savedData.stats } : DEFAULT_STATS);
+  const [currentTab, setCurrentTab] = useState<NavigationTab>(() => savedData?.currentTab ?? 'dashboard');
   const [selectedMarketItem, setSelectedMarketItem] = useState<MarketListing | null>(null);
   const [listingModalItem, setListingModalItem] = useState<InventoryItem | null>(null);
   const [activeNegotiation, setActiveNegotiation] = useState<ActiveNegotiation | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [isAutoPlay, setIsAutoPlay] = useState<boolean>(false);
-  const [gameSpeed, setGameSpeed] = useState<number>(1); // 1 = 3s per day, 2 = 1.5s per day
+  const [isAutoPlay, setIsAutoPlay] = useState<boolean>(() => Boolean(savedData?.isAutoPlay));
+  const [gameSpeed, setGameSpeed] = useState<number>(() => savedData?.gameSpeed ?? 1); // 1 = 3s per day, 2 = 1.5s per day
+
+  // Showroom, Skills, Location, Reputation
+  const [showroomRented, setShowroomRented] = useState<boolean>(() => Boolean(savedData?.showroomRented));
+  const [skills, setSkills] = useState<{
+    bargain: number;
+    analytics: number;
+    appraisal: number;
+    repair: number;
+    logistics: number;
+  }>(() => savedData?.skills ?? {
+    bargain: 0,
+    analytics: 0,
+    appraisal: 0,
+    repair: 0,
+    logistics: 0
+  });
+  const [currentLocation, setCurrentLocation] = useState<string>(() => savedData?.currentLocation ?? 'Блошиный рынок');
+  const [reputationPoints, setReputationPoints] = useState<number>(() => savedData?.reputationPoints ?? 20);
+
+  // Visual Theme & Device Frame
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    try {
+      const saved = localStorage.getItem('fl!p_theme');
+      return (saved === 'dark' || saved === 'light') ? saved : 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  const [deviceFrame, setDeviceFrame] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('fl!p_device_frame');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('fl!p_theme', theme);
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch {
+      // ignore
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('fl!p_device_frame', String(deviceFrame));
+    } catch {
+      // ignore
+    }
+  }, [deviceFrame]);
+
+  // Live Auctions State (Screenshot 5)
+  const [auctions, setAuctions] = useState<AuctionLot[]>(() => {
+    return Array.isArray(savedData?.auctions) && savedData.auctions.length > 0
+      ? savedData.auctions
+      : DEFAULT_AUCTIONS;
+  });
+
+  // Customer Orders State (Screenshot 4)
+  const [customerOrders, setCustomerOrders] = useState<CustomerOrder[]>(() => {
+    return Array.isArray(savedData?.customerOrders) && savedData.customerOrders.length > 0
+      ? savedData.customerOrders
+      : DEFAULT_CUSTOMER_ORDERS;
+  });
 
   // Computed Upgrade Effects
   const warehouseUpgrade = upgrades.find(u => u.effectType === 'warehouse_capacity');
-  const maxWarehouseSlots = 8 + ((warehouseUpgrade ? warehouseUpgrade.level : 0) * 6);
+  const maxWarehouseSlots = 8 + (skills.logistics * 3) + ((warehouseUpgrade ? warehouseUpgrade.level : 0) * 6) + (showroomRented ? 15 : 0);
   const usedWarehouseSlots = inventory.filter(i => i.status !== 'sold').length;
 
   const commissionUpgrade = upgrades.find(u => u.effectType === 'fee_discount');
@@ -931,9 +1180,164 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   }, [upgrades, balance, addNotification]);
 
+  // Live Auction Bidding
+  const bidAuction = useCallback((lotId: string, amount: number) => {
+    let success = false;
+    setAuctions(prev => prev.map(lot => {
+      if (lot.id !== lotId) return lot;
+      const newBid = lot.currentBid + amount;
+      if (balance < newBid) {
+        addNotification('Недостаточно средств', `Для ставки ${newBid.toLocaleString()} ₽ необходимо иметь сумму на балансе`, 'warning');
+        return lot;
+      }
+      setBalance(b => b - amount);
+      success = true;
+      addNotification('Ставка принята!', `Вы лидируете со ставкой ${newBid.toLocaleString()} ₽ на ${lot.title}`, 'success');
+      return {
+        ...lot,
+        currentBid: newBid,
+        highestBidder: 'Вы лидируете!',
+        isPlayerWinning: true,
+        bidCount: lot.bidCount + 1,
+        secondsRemaining: Math.max(12, lot.secondsRemaining + 6)
+      };
+    }));
+    return success;
+  }, [balance, addNotification]);
+
+  // Fulfill Customer Order
+  const fulfillOrder = useCallback((orderId: string, inventoryItemId: string) => {
+    const order = customerOrders.find(o => o.id === orderId);
+    const item = inventory.find(i => i.id === inventoryItemId);
+    if (!order || !item) return false;
+
+    const totalPayout = order.budget + order.bonusReward;
+    const profit = totalPayout - item.purchasePrice;
+
+    setBalance(b => b + totalPayout);
+    setInventory(prev => prev.filter(i => i.id !== inventoryItemId));
+    setCustomerOrders(prev => prev.map(o => o.id === orderId ? { ...o, isCompleted: true } : o));
+
+    setStats(prev => ({
+      ...prev,
+      totalRevenue: prev.totalRevenue + totalPayout,
+      totalNetProfit: prev.totalNetProfit + profit,
+      itemsSold: prev.itemsSold + 1,
+      profitableSales: prev.profitableSales + 1
+    }));
+
+    setReputationPoints(r => r + 5);
+    setXp(x => x + 250);
+
+    addNotification(
+      'Заказ успешно выполнен!',
+      `Вы передали ${item.title} клиенту ${order.clientName} и заработали ${totalPayout.toLocaleString()} ₽ (Бонус: +${order.bonusReward.toLocaleString()} ₽)`,
+      'success'
+    );
+    return true;
+  }, [customerOrders, inventory, addNotification]);
+
+  // Rent Showroom
+  const rentShowroom = useCallback(() => {
+    const RENT_COST = 45000;
+    if (balance < RENT_COST) {
+      addNotification('Недостаточно средств', `Для аренды шоурума необходимо 45 000 ₽`, 'warning');
+      return false;
+    }
+    setBalance(b => b - RENT_COST);
+    setShowroomRented(true);
+    addNotification('Шоурум открыт!', 'Вы арендовали торговое пространство. Склад расширен, витрины активированы!', 'success');
+    return true;
+  }, [balance, addNotification]);
+
+  // Upgrade Skill
+  const upgradeSkill = useCallback((skillKey: 'bargain' | 'analytics' | 'appraisal' | 'repair' | 'logistics') => {
+    const skillBaseCosts = {
+      bargain: 4200,
+      analytics: 5600,
+      appraisal: 4900,
+      repair: 7000,
+      logistics: 6300
+    };
+    const currentLvl = skills[skillKey];
+    if (currentLvl >= 5) {
+      addNotification('Максимальный уровень', 'Навык уже прокачан до 5-го уровня!', 'info');
+      return false;
+    }
+    const cost = skillBaseCosts[skillKey] * (currentLvl + 1);
+    if (balance < cost) {
+      addNotification('Недостаточно средств', `Для прокачки требуется ${cost.toLocaleString()} ₽`, 'warning');
+      return false;
+    }
+    setBalance(b => b - cost);
+    setSkills(prev => ({
+      ...prev,
+      [skillKey]: prev[skillKey] + 1
+    }));
+    addNotification('Навык прокачан!', `Навык повышен до уровня ${currentLvl + 1}/5!`, 'success');
+    return true;
+  }, [skills, balance, addNotification]);
+
+  // Auction countdown timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAuctions(prev => prev.map(lot => {
+        if (lot.secondsRemaining <= 1) {
+          if (lot.isPlayerWinning) {
+            const wonItem: InventoryItem = {
+              id: 'auc_won_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+              templateId: lot.id,
+              title: lot.title,
+              category: lot.category,
+              condition: lot.condition,
+              purchasePrice: lot.currentBid,
+              purchaseDay: day,
+              currentMarketPrice: lot.marketPrice,
+              shippingCost: 0,
+              image: lot.image,
+              status: 'in_warehouse',
+              demand: 'high',
+              daysInWarehouse: 0
+            };
+            setInventory(inv => [wonItem, ...inv]);
+            setStats(s => ({ ...s, auctionsWon: s.auctionsWon + 1, itemsBought: s.itemsBought + 1 }));
+            addNotification('Аукцион выигран!', `Поздравляем! Вы забрали ${lot.title} за ${lot.currentBid.toLocaleString()} ₽!`, 'success');
+          }
+          return {
+            ...lot,
+            currentBid: Math.round(lot.marketPrice * (0.5 + Math.random() * 0.15)),
+            highestBidder: ['Игорь Скупщик', 'Иван Барыга', 'Олег Реселлер', 'Артур Профи'][Math.floor(Math.random() * 4)],
+            isPlayerWinning: false,
+            secondsRemaining: 30 + Math.floor(Math.random() * 15),
+            bidCount: 1
+          };
+        }
+
+        let lotUpdate = { ...lot, secondsRemaining: lot.secondsRemaining - 1 };
+        if (lot.isPlayerWinning && lot.secondsRemaining > 6 && Math.random() < 0.08) {
+          const npcRaise = Math.random() < 0.5 ? 1000 : 5000;
+          lotUpdate = {
+            ...lotUpdate,
+            currentBid: lot.currentBid + npcRaise,
+            highestBidder: 'Игорь Скупщик',
+            isPlayerWinning: false,
+            bidCount: lot.bidCount + 1
+          };
+        }
+        return lotUpdate;
+      }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [day, addNotification]);
+
   // Reset Game
   const resetGame = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
     setDay(1);
     setBalance(INITIAL_BALANCE);
     setLevel(1);
@@ -943,19 +1347,19 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSalesHistory([]);
     setUpgrades(INITIAL_UPGRADES);
     setActiveEvents([]);
-    setStats({
-      totalRevenue: 0,
-      totalExpenses: 0,
-      totalFeesPaid: 0,
-      totalShippingPaid: 0,
-      totalNetProfit: 0,
-      itemsBought: 0,
-      itemsSold: 0,
-      profitableSales: 0,
-      unprofitableSales: 0,
-      bestSingleProfit: 0,
-      fastestSaleDays: 99
+    setStats(DEFAULT_STATS);
+    setSkills({
+      bargain: 0,
+      analytics: 0,
+      appraisal: 0,
+      repair: 0,
+      logistics: 0
     });
+    setShowroomRented(false);
+    setCurrentLocation('Блошиный рынок');
+    setReputationPoints(20);
+    setAuctions(DEFAULT_AUCTIONS);
+    setCustomerOrders(DEFAULT_CUSTOMER_ORDERS);
     setMarketListings(generateMarketListings(1, 1, []));
     setFinancialHistory([
       {
@@ -970,8 +1374,8 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addNotification('Игра сброшена', 'Вы начали заново с начальным капиталом 125 000 ₽.', 'info');
   }, [generateMarketListings, addNotification]);
 
-  // Save to localStorage on changes
-  useEffect(() => {
+  // Comprehensive Save to localStorage
+  const saveToDisk = useCallback(() => {
     try {
       const stateToSave = {
         day,
@@ -980,46 +1384,75 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         xp,
         reputation,
         inventory,
+        marketListings,
         salesHistory,
         upgrades,
+        activeEvents,
         stats,
-        financialHistory
+        financialHistory,
+        skills,
+        showroomRented,
+        currentLocation,
+        reputationPoints,
+        auctions,
+        customerOrders,
+        gameSpeed,
+        isAutoPlay,
+        currentTab
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-    } catch {
-      // ignore
+      const serialized = JSON.stringify(stateToSave);
+      localStorage.setItem(STORAGE_KEY, serialized);
+      localStorage.setItem(LEGACY_STORAGE_KEY, serialized);
+    } catch (err) {
+      console.warn('Failed to save to localStorage:', err);
     }
-  }, [day, balance, level, xp, reputation, inventory, salesHistory, upgrades, stats, financialHistory]);
+  }, [
+    day,
+    balance,
+    level,
+    xp,
+    reputation,
+    inventory,
+    marketListings,
+    salesHistory,
+    upgrades,
+    activeEvents,
+    stats,
+    financialHistory,
+    skills,
+    showroomRented,
+    currentLocation,
+    reputationPoints,
+    auctions,
+    customerOrders,
+    gameSpeed,
+    isAutoPlay,
+    currentTab
+  ]);
 
-  // Load from localStorage on first mount
+  // Persist whenever game state changes
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.day) setDay(parsed.day);
-        if (parsed.balance !== undefined) setBalance(parsed.balance);
-        if (parsed.level) setLevel(parsed.level);
-        if (parsed.xp !== undefined) setXp(parsed.xp);
-        if (parsed.reputation) setReputation(parsed.reputation);
-        if (Array.isArray(parsed.inventory)) setInventory(parsed.inventory);
-        if (Array.isArray(parsed.salesHistory)) setSalesHistory(parsed.salesHistory);
-        if (Array.isArray(parsed.upgrades)) setUpgrades(parsed.upgrades);
-        if (parsed.stats) setStats(parsed.stats);
-        if (Array.isArray(parsed.financialHistory)) setFinancialHistory(parsed.financialHistory);
-      }
-    } catch {
-      // ignore
-    }
+    saveToDisk();
+  }, [saveToDisk]);
 
-    // Populate initial market listings if empty or without vehicles
+  // Guaranteed save right before page reload or window close
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      saveToDisk();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [saveToDisk]);
+
+  // Generate initial market listings if empty or without vehicles
+  useEffect(() => {
     setMarketListings(prev => {
       if (prev.length === 0 || !prev.some(m => m.category === 'vehicles')) {
-        return generateMarketListings(1, 1, []);
+        return generateMarketListings(day, level, activeEvents);
       }
       return prev;
     });
-  }, [generateMarketListings]);
+  }, [day, level, activeEvents, generateMarketListings]);
 
   const value = useMemo(() => ({
     day,
@@ -1062,7 +1495,23 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAutoPlay,
     setIsAutoPlay,
     gameSpeed,
-    setGameSpeed
+    setGameSpeed,
+    auctions,
+    bidAuction,
+    customerOrders,
+    fulfillOrder,
+    showroomRented,
+    rentShowroom,
+    skills,
+    upgradeSkill,
+    currentLocation,
+    setCurrentLocation,
+    reputationPoints,
+    theme,
+    setTheme,
+    toggleTheme,
+    deviceFrame,
+    setDeviceFrame
   }), [
     day,
     balance,
@@ -1099,7 +1548,20 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purchaseUpgrade,
     resetGame,
     isAutoPlay,
-    gameSpeed
+    gameSpeed,
+    auctions,
+    bidAuction,
+    customerOrders,
+    fulfillOrder,
+    showroomRented,
+    rentShowroom,
+    skills,
+    upgradeSkill,
+    currentLocation,
+    reputationPoints,
+    theme,
+    toggleTheme,
+    deviceFrame
   ]);
 
   return (

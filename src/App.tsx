@@ -8,6 +8,9 @@ import { SalesView } from './components/views/SalesView';
 import { FinancesView } from './components/views/FinancesView';
 import { UpgradesView } from './components/views/UpgradesView';
 import { SettingsView } from './components/views/SettingsView';
+import { AuctionsView } from './components/views/AuctionsView';
+import { ClientsView } from './components/views/ClientsView';
+import { ShowroomView } from './components/views/ShowroomView';
 import { ProductDetailModal } from './components/modals/ProductDetailModal';
 import { ListingModal } from './components/modals/ListingModal';
 import { NegotiationModal } from './components/modals/NegotiationModal';
@@ -16,7 +19,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { NavigationTab } from './types';
 
 const GameContainer: React.FC = () => {
-  const { currentTab, setCurrentTab, advanceDay } = useGame();
+  const { currentTab, setCurrentTab, advanceDay, deviceFrame, theme } = useGame();
 
   // Keyboard Shortcuts Hook
   useEffect(() => {
@@ -34,11 +37,9 @@ const GameContainer: React.FC = () => {
       const tabs: NavigationTab[] = [
         'dashboard', 
         'market', 
+        'auctions',
         'warehouse', 
-        'sales', 
-        'finances', 
-        'upgrades', 
-        'settings'
+        'finances'
       ];
 
       const keyNum = parseInt(e.key, 10);
@@ -52,29 +53,49 @@ const GameContainer: React.FC = () => {
   }, [advanceDay, setCurrentTab]);
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-full overflow-hidden bg-zinc-50 font-sans text-zinc-900 antialiased selection:bg-zinc-200">
-      {/* Top Header with Compact Navigation (Сводка | Рынок | Склад | Продажи | Финансы) */}
-      <TopHeader />
+    <div className={`min-h-screen w-full flex items-center justify-center transition-colors duration-200 ${
+      deviceFrame ? 'bg-slate-100 dark:bg-[#070C18] sm:py-6 sm:px-4' : 'bg-[#F8FAFC] dark:bg-[#0B1120]'
+    }`}>
+      {/* Mobile Device Frame or Responsive Container */}
+      <div className={`w-full flex flex-col transition-all duration-300 ${
+        deviceFrame 
+          ? 'max-w-[440px] h-[100dvh] sm:h-[900px] sm:max-h-[92vh] sm:rounded-[44px] sm:border-[8px] sm:border-slate-800 dark:sm:border-slate-700/80 sm:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)] dark:sm:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] relative overflow-hidden bg-[#F8FAFC] dark:bg-[#0B1120]' 
+          : 'max-w-2xl min-h-screen sm:min-h-[100dvh] bg-[#F8FAFC] dark:bg-[#0B1120] relative shadow-lg'
+      }`}>
+        
+        {/* Hardware Dynamic Island Notch (Only in device frame on desktop) */}
+        {deviceFrame && (
+          <div className="hidden sm:flex absolute top-2 left-1/2 -translate-x-1/2 w-28 h-5 bg-black rounded-full z-50 items-center justify-end px-2 pointer-events-none">
+            <div className="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-700/50" />
+          </div>
+        )}
 
-      {/* Main Dynamic View Container */}
-      <main className="flex-1 w-full max-w-full overflow-y-auto overflow-x-hidden p-3 sm:p-6 md:p-8 pb-28 md:pb-8 overscroll-contain">
-        {currentTab === 'dashboard' && <DashboardView />}
-        {currentTab === 'market' && <MarketView />}
-        {currentTab === 'warehouse' && <WarehouseView />}
-        {currentTab === 'sales' && <SalesView />}
-        {currentTab === 'finances' && <FinancesView />}
-        {currentTab === 'upgrades' && <UpgradesView />}
-        {currentTab === 'settings' && <SettingsView />}
-      </main>
+        {/* Top Header with Compact Navigation & Fast Actions */}
+        <TopHeader />
 
-      {/* Mobile Bottom Navigation for Handheld Touch Devices */}
-      <MobileBottomNav />
+        {/* Main Dynamic View Container with smooth vertical scroll */}
+        <main className="flex-1 w-full overflow-y-auto overflow-x-hidden p-3.5 sm:p-4 pb-32 overscroll-contain no-scrollbar">
+          {currentTab === 'dashboard' && <DashboardView />}
+          {currentTab === 'market' && <MarketView />}
+          {currentTab === 'auctions' && <AuctionsView />}
+          {currentTab === 'warehouse' && <WarehouseView />}
+          {currentTab === 'showroom' && <ShowroomView />}
+          {currentTab === 'clients' && <ClientsView />}
+          {currentTab === 'sales' && <SalesView />}
+          {currentTab === 'finances' && <FinancesView />}
+          {currentTab === 'upgrades' && <UpgradesView />}
+          {currentTab === 'settings' && <SettingsView />}
+        </main>
 
-      {/* Global Modals & Overlays */}
-      <NegotiationModal />
-      <ProductDetailModal />
-      <ListingModal />
-      <NotificationToast />
+        {/* Mobile Bottom Navigation for Handheld Touch Devices */}
+        <MobileBottomNav />
+
+        {/* Global Modals & Overlays */}
+        <NegotiationModal />
+        <ProductDetailModal />
+        <ListingModal />
+        <NotificationToast />
+      </div>
     </div>
   );
 };
