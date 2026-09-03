@@ -10,7 +10,8 @@ import {
   Play, 
   Pause, 
   ArrowRight, 
-  Radio
+  Radio,
+  Wallet
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { NavigationTab } from '../types';
@@ -49,34 +50,34 @@ export const TopHeader: React.FC = () => {
   ];
 
   return (
-    <header className="border-b border-zinc-200 bg-white select-none shrink-0 sticky top-0 z-40">
+    <header className="border-b border-zinc-200 bg-white select-none shrink-0 sticky top-0 z-40 w-full max-w-full overflow-hidden">
       {/* Top Banner if Active Market Event */}
       {currentEvent && (
-        <div className="bg-zinc-900 text-white px-4 py-1 text-[11px] flex items-center justify-between">
+        <div className="bg-zinc-900 text-white px-3 sm:px-4 py-1 text-[11px] flex items-center justify-between">
           <div className="flex items-center gap-2 max-w-2xl truncate">
             <Radio className="w-3 h-3 text-emerald-400 shrink-0 animate-pulse" />
             <span className="font-semibold text-zinc-100">{currentEvent.title}:</span>
             <span className="text-zinc-300 truncate">{currentEvent.description}</span>
           </div>
           <span className="text-[10px] font-mono text-zinc-400 shrink-0 ml-2">
-            осталось {currentEvent.durationDays} дн.
+            {currentEvent.durationDays} дн.
           </span>
         </div>
       )}
 
       {/* Main Top Navigation Row */}
-      <div className="h-14 px-4 sm:px-6 flex items-center justify-between gap-4">
+      <div className="h-14 px-2.5 sm:px-6 flex items-center justify-between gap-1.5 sm:gap-4 w-full max-w-full">
         {/* Left: Brand Identity */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setCurrentTab('dashboard')}>
-            <div className="w-7 h-7 rounded-md bg-zinc-900 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-2xs">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer touch-manipulation" onClick={() => setCurrentTab('dashboard')}>
+            <div className="w-7 h-7 rounded-md bg-zinc-900 text-white flex items-center justify-center font-bold text-xs tracking-wider shadow-2xs shrink-0">
               ПР
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-sm tracking-tight text-zinc-900 leading-none">
+            <div className="flex flex-col leading-none">
+              <span className="font-bold text-xs sm:text-sm tracking-tight text-zinc-900">
                 ПЕРЕКУП
               </span>
-              <span className="text-[10px] text-zinc-400 font-mono tracking-tighter">
+              <span className="hidden sm:block text-[10px] text-zinc-400 font-mono tracking-tighter mt-0.5">
                 бизнес-симулятор
               </span>
             </div>
@@ -147,21 +148,36 @@ export const TopHeader: React.FC = () => {
         </nav>
 
         {/* Right: Key Business Metrics & Step Simulation Controls */}
-        <div className="flex items-center gap-3 shrink-0">
-          {/* Capital / Balance */}
-          <div className="text-right">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Capital / Balance: Desktop View */}
+          <div className="text-right hidden sm:block">
             <div className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">Баланс</div>
             <div className="text-sm sm:text-base font-bold font-mono text-zinc-900 leading-none">
               {balance.toLocaleString()} ₽
             </div>
           </div>
 
-          {/* Day Display */}
-          <div className="px-2.5 py-1 rounded-md bg-zinc-100 border border-zinc-200 text-xs font-mono font-medium text-zinc-800">
-            День {day}
+          {/* Capital / Balance: Compact Mobile View */}
+          <div 
+            className="sm:hidden flex items-center gap-1 px-1.5 py-1 rounded-md bg-zinc-100/90 border border-zinc-200 text-xs font-mono font-bold text-zinc-900 shrink-0"
+            title={`Баланс: ${balance.toLocaleString()} ₽`}
+          >
+            <Wallet className="w-3 h-3 text-zinc-500 shrink-0" />
+            <span>
+              {balance >= 1_000_000 
+                ? `${(balance / 1_000_000).toFixed(1)}М` 
+                : `${Math.round(balance / 1000)}к`} ₽
+            </span>
           </div>
 
-          {/* Speed & Auto-play */}
+          {/* Day Display */}
+          <div className="px-1.5 sm:px-2.5 py-1 rounded-md bg-zinc-100 border border-zinc-200 text-xs font-mono font-medium text-zinc-800 shrink-0 whitespace-nowrap">
+            <span className="hidden sm:inline">День </span>
+            <span className="sm:hidden">Д.</span>
+            {day}
+          </div>
+
+          {/* Speed & Auto-play (hidden on mobile) */}
           <div className="hidden sm:flex items-center gap-1 pl-1 border-l border-zinc-200">
             <button
               onClick={() => setGameSpeed(gameSpeed === 1 ? 2 : 1)}
@@ -190,11 +206,11 @@ export const TopHeader: React.FC = () => {
           {/* Primary Action: Advance Day */}
           <button
             onClick={advanceDay}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 active:scale-98 text-white text-xs font-semibold transition-all shadow-xs"
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 active:scale-95 text-white text-xs font-semibold transition-all shadow-xs shrink-0 whitespace-nowrap touch-manipulation"
             title="Перейти к следующему дню [Пробел]"
           >
             <span>След. день</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3.5 h-3.5 shrink-0" />
           </button>
         </div>
       </div>
