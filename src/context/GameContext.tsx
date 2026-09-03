@@ -974,20 +974,28 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.day) setDay(parsed.day);
-        if (parsed.balance) setBalance(parsed.balance);
+        if (parsed.balance !== undefined) setBalance(parsed.balance);
         if (parsed.level) setLevel(parsed.level);
-        if (parsed.xp) setXp(parsed.xp);
+        if (parsed.xp !== undefined) setXp(parsed.xp);
         if (parsed.reputation) setReputation(parsed.reputation);
-        if (parsed.inventory) setInventory(parsed.inventory);
-        if (parsed.salesHistory) setSalesHistory(parsed.salesHistory);
-        if (parsed.upgrades) setUpgrades(parsed.upgrades);
+        if (Array.isArray(parsed.inventory)) setInventory(parsed.inventory);
+        if (Array.isArray(parsed.salesHistory)) setSalesHistory(parsed.salesHistory);
+        if (Array.isArray(parsed.upgrades)) setUpgrades(parsed.upgrades);
         if (parsed.stats) setStats(parsed.stats);
-        if (parsed.financialHistory) setFinancialHistory(parsed.financialHistory);
+        if (Array.isArray(parsed.financialHistory)) setFinancialHistory(parsed.financialHistory);
       }
     } catch {
       // ignore
     }
-  }, []);
+
+    // Populate initial market listings if empty
+    setMarketListings(prev => {
+      if (prev.length === 0) {
+        return generateMarketListings(1, 1, []);
+      }
+      return prev;
+    });
+  }, [generateMarketListings]);
 
   const value = useMemo(() => ({
     day,

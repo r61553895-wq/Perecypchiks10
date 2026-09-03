@@ -12,6 +12,7 @@ import { ProductDetailModal } from './components/modals/ProductDetailModal';
 import { ListingModal } from './components/modals/ListingModal';
 import { NegotiationModal } from './components/modals/NegotiationModal';
 import { NotificationToast } from './components/NotificationToast';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { NavigationTab } from './types';
 
 const GameContainer: React.FC = () => {
@@ -80,8 +81,10 @@ const GameContainer: React.FC = () => {
 
 export default function App() {
   return (
-    <GameProvider>
-      <GameContainer />
-    </GameProvider>
+    <ErrorBoundary>
+      <GameProvider>
+        <GameContainer />
+      </GameProvider>
+    </ErrorBoundary>
   );
 }
