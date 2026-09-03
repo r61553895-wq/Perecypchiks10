@@ -3,7 +3,8 @@ export type ItemCategory =
   | 'smartphones'       // Смартфоны & Планшеты
   | 'audio_photo'       // Аудио & Фото
   | 'laptops_pc'        // Комплектующие & Ноутбуки
-  | 'luxury_drops';     // Премиум часы & Коллекционные вещи
+  | 'luxury_drops'      // Премиум часы & Коллекционные вещи
+  | 'vehicles';         // Автомобили & Автоперекуп
 
 export type ItemCondition = 'new' | 'like_new' | 'good' | 'fair';
 

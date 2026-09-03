@@ -211,11 +211,12 @@ export const MobileBottomNav: React.FC = () => {
     { id: 'market', label: 'Рынок', icon: ShoppingBag, badge: marketListings.length },
     { id: 'warehouse', label: 'Склад', icon: Package, badge: `${usedWarehouseSlots}/${maxWarehouseSlots}` },
     { id: 'sales', label: 'Продажи', icon: TrendingUp, badge: listedCount > 0 ? listedCount : undefined },
-    { id: 'finances', label: 'Финансы', icon: PieChart }
+    { id: 'finances', label: 'Финансы', icon: PieChart },
+    { id: 'upgrades', label: 'Развитие', icon: Award }
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-white border-t border-zinc-200 flex items-center justify-around z-40 px-2 shadow-lg select-none">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(3.5rem+env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-white/95 backdrop-blur-md border-t border-zinc-200 flex items-center justify-around z-40 px-1 shadow-lg select-none">
       {tabs.map(tab => {
         const Icon = tab.icon;
         const isActive = currentTab === tab.id;
@@ -223,19 +224,19 @@ export const MobileBottomNav: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setCurrentTab(tab.id)}
-            className={`flex flex-col items-center justify-center flex-1 py-1 relative ${
+            className={`flex flex-col items-center justify-center flex-1 py-1 relative touch-manipulation active:scale-95 transition-transform ${
               isActive ? 'text-zinc-900 font-bold' : 'text-zinc-400 font-medium'
             }`}
           >
             <div className="relative">
               <Icon className="w-4 h-4" />
               {tab.badge !== undefined && (
-                <span className="absolute -top-1 -right-2 text-[9px] font-mono bg-zinc-900 text-white px-1 rounded-full">
+                <span className="absolute -top-1 -right-2 text-[8px] font-mono bg-zinc-900 text-white px-1 rounded-full leading-tight">
                   {typeof tab.badge === 'string' ? tab.badge.split('/')[0] : tab.badge}
                 </span>
               )}
             </div>
-            <span className="text-[10px] mt-0.5">{tab.label}</span>
+            <span className="text-[9px] mt-0.5 tracking-tight">{tab.label}</span>
           </button>
         );
       })}

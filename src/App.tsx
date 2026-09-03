@@ -52,12 +52,12 @@ const GameContainer: React.FC = () => {
   }, [advanceDay, setCurrentTab]);
 
   return (
-    <div className="flex flex-col min-h-screen w-screen bg-zinc-50 font-sans text-zinc-900 antialiased selection:bg-zinc-200">
+    <div className="flex flex-col h-[100dvh] w-full max-w-full overflow-hidden bg-zinc-50 font-sans text-zinc-900 antialiased selection:bg-zinc-200">
       {/* Top Header with Compact Navigation (Сводка | Рынок | Склад | Продажи | Финансы) */}
       <TopHeader />
 
       {/* Main Dynamic View Container */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 pb-20 md:pb-8">
+      <main className="flex-1 w-full max-w-full overflow-y-auto overflow-x-hidden p-3 sm:p-6 md:p-8 pb-28 md:pb-8 overscroll-contain">
         {currentTab === 'dashboard' && <DashboardView />}
         {currentTab === 'market' && <MarketView />}
         {currentTab === 'warehouse' && <WarehouseView />}

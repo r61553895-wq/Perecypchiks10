@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Tag, TrendingUp, AlertTriangle, CheckCircle2, Percent, Truck, Gauge } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
+import { ProductImage } from '../ProductImage';
 
 export const ListingModal: React.FC = () => {
   const { 
@@ -90,11 +91,15 @@ export const ListingModal: React.FC = () => {
         <div className="p-5 space-y-4">
           {/* Item Mini Header */}
           <div className="flex items-center gap-3">
-            <img 
-              src={item.image} 
-              alt={item.title} 
-              className="w-12 h-12 rounded-lg bg-zinc-100 object-cover border border-zinc-200 shrink-0" 
-            />
+            <div className="w-12 h-12 rounded-lg bg-zinc-900 border border-zinc-200 overflow-hidden shrink-0">
+              <ProductImage 
+                src={item.image} 
+                alt={item.title} 
+                title={item.title}
+                category={item.category}
+                className="w-full h-full object-cover"
+              />
+            </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-semibold text-zinc-900 truncate">{item.title}</div>
               <div className="text-[11px] text-zinc-500 font-mono mt-0.5">

@@ -16,6 +16,7 @@ import {
 import { useGame } from '../../context/GameContext';
 import { ItemCategory, ItemCondition, DemandLevel, MarketListing } from '../../types';
 import { CATEGORY_LABELS, CONDITION_LABELS, DEMAND_LABELS, SELLER_ARCHETYPES, SELLER_MOODS } from '../../data/catalog';
+import { ProductImage } from '../ProductImage';
 
 export const MarketView: React.FC = () => {
   const { 
@@ -178,20 +179,22 @@ export const MarketView: React.FC = () => {
                 {/* Top: Image, Badges, Title */}
                 <div>
                   <div className="flex gap-3">
-                    <div className="relative w-20 h-20 rounded-lg bg-zinc-100 border border-zinc-200/70 overflow-hidden shrink-0">
-                      <img 
+                    <div className="relative w-20 h-20 rounded-lg bg-zinc-900 border border-zinc-200/70 overflow-hidden shrink-0">
+                      <ProductImage 
                         src={item.image} 
                         alt={item.title} 
+                        title={item.title}
+                        category={item.category}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         loading="lazy"
                       />
                       {item.isBargainDeal && (
-                        <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-600 text-white tracking-tight shadow-xs">
+                        <div className="absolute top-1 left-1 z-30 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-600 text-white tracking-tight shadow-xs">
                           Выгодно
                         </div>
                       )}
                       {item.isOverpriced && (
-                        <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-600 text-white tracking-tight shadow-xs">
+                        <div className="absolute top-1 left-1 z-30 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-600 text-white tracking-tight shadow-xs">
                           Риск
                         </div>
                       )}

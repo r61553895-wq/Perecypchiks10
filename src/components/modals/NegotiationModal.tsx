@@ -13,6 +13,7 @@ import {
 import { useGame } from '../../context/GameContext';
 import { SELLER_ARCHETYPES, SELLER_MOODS, CONDITION_LABELS } from '../../data/catalog';
 import { ActiveNegotiation } from '../../types';
+import { ProductImage } from '../ProductImage';
 
 interface NegotiationContentProps {
   negotiation: ActiveNegotiation;
@@ -117,12 +118,15 @@ const NegotiationModalContent: React.FC<NegotiationContentProps> = ({ negotiatio
         <div className="p-5 overflow-y-auto space-y-4 text-xs">
           {/* Item Banner */}
           <div className="flex items-center gap-3 p-3 rounded-lg border border-zinc-200/80 bg-zinc-50/50">
-            <img 
-              src={listing.image} 
-              alt={listing.title} 
-              referrerPolicy="no-referrer"
-              className="w-14 h-14 rounded-md object-cover border border-zinc-200 shrink-0 bg-white" 
-            />
+            <div className="w-14 h-14 rounded-md border border-zinc-200 shrink-0 bg-zinc-900 overflow-hidden">
+              <ProductImage 
+                src={listing.image} 
+                alt={listing.title} 
+                title={listing.title}
+                category={listing.category}
+                className="w-full h-full object-cover" 
+              />
+            </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-[10px] text-zinc-500 mb-0.5">
                 <span className="uppercase font-mono tracking-wider">{listing.brand}</span>

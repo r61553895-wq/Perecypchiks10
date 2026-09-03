@@ -256,6 +256,86 @@ export const INITIAL_PRODUCT_TEMPLATES: ProductTemplate[] = [
     requiredLevel: 5,
     image: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=600&auto=format&fit=crop&q=80',
     brand: 'HyperDrop'
+  },
+
+  // VEHICLES (Автоперекуп: от классики до немецкого премиума)
+  {
+    id: 'prod_car_lada_tuner',
+    title: 'ВАЗ 2107 Тюнинг / Боевая Классика',
+    category: 'vehicles',
+    baseMarketPrice: 160000,
+    minPrice: 95000,
+    maxPrice: 240000,
+    volatility: 0.18,
+    shippingCost: 8000,
+    requiredLevel: 1,
+    image: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?w=600&auto=format&fit=crop&q=80',
+    brand: 'Lada Custom'
+  },
+  {
+    id: 'prod_car_bmw_e46',
+    title: 'BMW 3-Series E46 M-Пакет (Седан)',
+    category: 'vehicles',
+    baseMarketPrice: 580000,
+    minPrice: 380000,
+    maxPrice: 790000,
+    volatility: 0.16,
+    shippingCost: 12000,
+    requiredLevel: 2,
+    image: 'https://images.unsplash.com/photo-1555353540-64580b51c258?w=600&auto=format&fit=crop&q=80',
+    brand: 'BMW'
+  },
+  {
+    id: 'prod_car_mark2_tourer',
+    title: 'Toyota Mark II Tourer V (1JZ-GTE Turbo)',
+    category: 'vehicles',
+    baseMarketPrice: 890000,
+    minPrice: 590000,
+    maxPrice: 1250000,
+    volatility: 0.19,
+    shippingCost: 15000,
+    requiredLevel: 2,
+    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&auto=format&fit=crop&q=80',
+    brand: 'Toyota'
+  },
+  {
+    id: 'prod_car_camry_35',
+    title: 'Toyota Camry 3.5 V6 (Черный седан)',
+    category: 'vehicles',
+    baseMarketPrice: 1950000,
+    minPrice: 1400000,
+    maxPrice: 2600000,
+    volatility: 0.14,
+    shippingCost: 18000,
+    requiredLevel: 3,
+    image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=600&auto=format&fit=crop&q=80',
+    brand: 'Toyota'
+  },
+  {
+    id: 'prod_car_mercedes_w212',
+    title: 'Mercedes-Benz E-Class W212 AMG-Line',
+    category: 'vehicles',
+    baseMarketPrice: 2650000,
+    minPrice: 1850000,
+    maxPrice: 3500000,
+    volatility: 0.15,
+    shippingCost: 22000,
+    requiredLevel: 4,
+    image: 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=600&auto=format&fit=crop&q=80',
+    brand: 'Mercedes-Benz'
+  },
+  {
+    id: 'prod_car_porsche_911',
+    title: 'Porsche 911 Carrera S (991 Coupe)',
+    category: 'vehicles',
+    baseMarketPrice: 8400000,
+    minPrice: 5900000,
+    maxPrice: 11200000,
+    volatility: 0.22,
+    shippingCost: 45000,
+    requiredLevel: 5,
+    image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&auto=format&fit=crop&q=80',
+    brand: 'Porsche'
   }
 ];
 
@@ -400,6 +480,24 @@ export const POSSIBLE_EVENTS = [
     priceMultiplier: 1.2,
     demandShift: 'high' as const,
     durationDays: 4
+  },
+  {
+    id: 'ev_car_season',
+    title: 'Сезонный бум на авторынке',
+    description: 'Спрос на автомобили с пробегом вырос на 20%, машины раскупают мгновенно!',
+    categoryAffected: 'vehicles' as const,
+    priceMultiplier: 1.2,
+    demandShift: 'surge' as const,
+    durationDays: 5
+  },
+  {
+    id: 'ev_auto_tax',
+    title: 'Колебания утильсбора',
+    description: 'Цены на вторичные автомобили подскочили, покупатели готовы платить больше.',
+    categoryAffected: 'vehicles' as const,
+    priceMultiplier: 1.15,
+    demandShift: 'high' as const,
+    durationDays: 4
   }
 ];
 
@@ -408,7 +506,8 @@ export const CATEGORY_LABELS: Record<string, string> = {
   smartphones: 'Смартфоны',
   audio_photo: 'Аудио & Фото',
   laptops_pc: 'ПК & Ноутбуки',
-  luxury_drops: 'Премиум & Дропы'
+  luxury_drops: 'Премиум & Дропы',
+  vehicles: 'Автомобили'
 };
 
 export const CONDITION_LABELS: Record<string, { label: string; multiplier: number; badgeColor: string }> = {

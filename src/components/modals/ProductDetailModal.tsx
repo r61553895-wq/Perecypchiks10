@@ -2,6 +2,7 @@ import React from 'react';
 import { X, ShoppingBag, TrendingUp, AlertCircle, Sparkles, Check, Truck, Percent, Info } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { CATEGORY_LABELS, CONDITION_LABELS, DEMAND_LABELS } from '../../data/catalog';
+import { ProductImage } from '../ProductImage';
 
 export const ProductDetailModal: React.FC = () => {
   const { 
@@ -85,10 +86,12 @@ export const ProductDetailModal: React.FC = () => {
         <div className="p-5 space-y-4">
           {/* Top preview row */}
           <div className="flex gap-4 items-center">
-            <div className="w-24 h-24 rounded-xl bg-zinc-100 border border-zinc-200 overflow-hidden shrink-0">
-              <img 
+            <div className="w-24 h-24 rounded-xl bg-zinc-900 border border-zinc-200 overflow-hidden shrink-0">
+              <ProductImage 
                 src={item.image} 
                 alt={item.title} 
+                title={item.title}
+                category={item.category}
                 className="w-full h-full object-cover"
               />
             </div>

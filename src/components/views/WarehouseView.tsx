@@ -13,6 +13,7 @@ import {
 import { useGame } from '../../context/GameContext';
 import { CONDITION_LABELS, DEMAND_LABELS } from '../../data/catalog';
 import { InventoryItem } from '../../types';
+import { ProductImage } from '../ProductImage';
 
 export const WarehouseView: React.FC = () => {
   const { 
@@ -97,14 +98,16 @@ export const WarehouseView: React.FC = () => {
                 <div>
                   {/* Image & Title Header */}
                   <div className="flex gap-3">
-                    <div className="relative w-20 h-20 rounded-lg bg-zinc-100 border border-zinc-200/70 overflow-hidden shrink-0">
-                      <img 
+                    <div className="relative w-20 h-20 rounded-lg bg-zinc-900 border border-zinc-200/70 overflow-hidden shrink-0">
+                      <ProductImage 
                         src={item.image} 
-                        alt={item.title} 
+                        alt={item.title}
+                        title={item.title}
+                        category={item.category}
                         className="w-full h-full object-cover"
                       />
                       {isListed && (
-                        <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-900 text-white shadow-xs">
+                        <div className="absolute top-1 left-1 z-30 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-zinc-900 text-white shadow-xs">
                           На витрине
                         </div>
                       )}

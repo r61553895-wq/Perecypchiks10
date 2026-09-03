@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useGame } from '../../context/GameContext';
 import { CONDITION_LABELS, CATEGORY_LABELS } from '../../data/catalog';
+import { ProductImage } from '../ProductImage';
 
 export const SalesView: React.FC = () => {
   const { 
@@ -101,11 +102,15 @@ export const SalesView: React.FC = () => {
                   >
                     <div>
                       <div className="flex gap-3">
-                        <img 
-                          src={item.image} 
-                          alt={item.title} 
-                          className="w-16 h-16 rounded-lg bg-zinc-100 object-cover border border-zinc-200 shrink-0" 
-                        />
+                        <div className="w-16 h-16 rounded-lg bg-zinc-900 border border-zinc-200 overflow-hidden shrink-0">
+                          <ProductImage 
+                            src={item.image} 
+                            alt={item.title} 
+                            title={item.title}
+                            category={item.category}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                         <div className="min-w-0 flex-1">
                           <span className={`px-1.5 py-0.2 rounded text-[10px] font-medium border ${CONDITION_LABELS[item.condition].badgeColor}`}>
                             {CONDITION_LABELS[item.condition].label}

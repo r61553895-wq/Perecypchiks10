@@ -188,10 +188,32 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       'Витринный образец без царапин.'
     ];
 
-    const newListings: MarketListing[] = [];
+    const carSellerNotes = [
+      'Не бит, не крашен, один хозяин. ПТС оригинал на руках.',
+      'Сел и поехал! Двигатель шепчет, коробка плавная, торг строго у капота.',
+      'Срочно в связи с покупкой недвижимости. Комплект зимней резины в подарок!',
+      'Гаражное хранение, родной подтвержденный пробег, любые автоэксперты приветствуются.',
+      'Масло и фильтры поменяны 400 км назад, подвеска обслужена, чистый салон.',
+      'Второй авто в семье, ездила супруга очень аккуратно, без ДТП.'
+    ];
 
-    for (let i = 0; i < count; i++) {
-      const template = availableTemplates[Math.floor(Math.random() * availableTemplates.length)];
+    const newListings: MarketListing[] = [];
+    const chosenTemplates: typeof availableTemplates = [];
+    const vehicleTemplates = availableTemplates.filter(t => t.category === 'vehicles');
+
+    // Guarantee at least 1-2 car deals in the market
+    if (vehicleTemplates.length > 0) {
+      const carCount = Math.min(vehicleTemplates.length, Math.random() < 0.6 ? 2 : 1);
+      for (let c = 0; c < carCount; c++) {
+        chosenTemplates.push(vehicleTemplates[Math.floor(Math.random() * vehicleTemplates.length)]);
+      }
+    }
+    while (chosenTemplates.length < count) {
+      chosenTemplates.push(availableTemplates[Math.floor(Math.random() * availableTemplates.length)]);
+    }
+
+    for (let i = 0; i < chosenTemplates.length; i++) {
+      const template = chosenTemplates[i];
       const condition = conditions[Math.floor(Math.random() * conditions.length)];
       const condMultiplier = CONDITION_LABELS[condition].multiplier;
 
@@ -283,7 +305,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
         image: template.image,
         brand: template.brand,
         daysRemaining: Math.floor(Math.random() * 3) + 2,
-        sellerNote: sellerNotes[Math.floor(Math.random() * sellerNotes.length)],
+        sellerNote: template.category === 'vehicles' 
+          ? carSellerNotes[Math.floor(Math.random() * carSellerNotes.length)]
+          : sellerNotes[Math.floor(Math.random() * sellerNotes.length)],
         isBargainDeal: isBargain,
         isOverpriced,
         sellerArchetype,
@@ -988,9 +1012,9 @@ export const GameProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // ignore
     }
 
-    // Populate initial market listings if empty
+    // Populate initial market listings if empty or without vehicles
     setMarketListings(prev => {
-      if (prev.length === 0) {
+      if (prev.length === 0 || !prev.some(m => m.category === 'vehicles')) {
         return generateMarketListings(1, 1, []);
       }
       return prev;
